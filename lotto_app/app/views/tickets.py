@@ -36,8 +36,8 @@ class TicketViewSet(ViewSet):
         response = tickets_from_stoloto(self.url, headers=self._get_headers())
         return Response(response.json(), status=response.status_code)
 
-    @action(detail=False, url_path='rus_tickets_maybe', methods=['get'])
-    def rus_tickets_maybe(self, request):
+    @action(detail=False, url_path='rus_dict_tickets', methods=['get'])
+    def rus_dict_tickets(self, request):
         response = tickets_from_stoloto(self.url, self._get_headers())
         response_json = tickets_check_status_code(response)
         tickets = get_tickets(response_json)
