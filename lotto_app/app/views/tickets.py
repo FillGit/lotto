@@ -3,7 +3,11 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
+from lotto_app.app.utils import tickets_from_stoloto, tickets_check_status_code, get_tickets
+
 class TicketViewSet(ViewSet):
+    url = 'https://www.stoloto.ru/p/api/mobile/api/v34/games/change?game=ruslotto&count=20'
+
 
     def _get_headers(self):
         return {
@@ -27,10 +31,15 @@ class TicketViewSet(ViewSet):
         payload = {'test': 'pass test simple_tickets'}
         return Response(payload, status=200)
 
-    @action(detail=False, url_path='rus_simple_tickets', methods=['get'])
-    def rus_simple_tickets(self, request):
-        url = 'https://www.stoloto.ru/p/api/mobile/api/v34/games/change?game=ruslotto&count=20'
-        response = requests.get(url, headers=self._get_headers())
-        if response.status_code == 200:
-            return Response(response.json(), status=response.status_code)
+    @action(detail=False, url_path='rus_tickets_from_stoloto', methods=['get'])
+    def rus_tickets_from_stoloto(self, request):
+        response = tickets_from_stoloto(self.url, headers=self._get_headers())
         return Response(response.json(), status=response.status_code)
+
+    @action(detail=False, url_path='rus_dict_tickets', methods=['get'])
+    def rus_dict_tickets(self, request):
+        response = tickets_from_stoloto(self.url, self._get_headers())
+        response_json = tickets_check_status_code(response)
+        tickets = get_tickets(response_json)
+
+        return Response(tickets, status=200)
