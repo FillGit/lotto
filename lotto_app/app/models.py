@@ -4,4 +4,4 @@ from django.db import models
 
 class Game(models.Model):
     game = models.CharField(max_length=20, blank=False, unique=True)
-    numbers = models.CharField(max_length=200)
+    numbers = models.CharField(max_length=2000)
