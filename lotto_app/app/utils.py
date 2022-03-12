@@ -1,11 +1,7 @@
 import requests
 
-
 def tickets_from_stoloto(url, headers):
-    return requests.get(url, headers=headers)
-
-
-def tickets_check_status_code(response):
+    response = requests.get(url, headers=headers)
     if response.status_code != 200:
         raise ValueError(f'{response.status_code} and {response.json()}')
     return response.json()

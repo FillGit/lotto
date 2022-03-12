@@ -7,3 +7,5 @@ venv/
 .idea/
 
 __pycache__/
+
+file_choice_ten_tickets.json
