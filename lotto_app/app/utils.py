@@ -53,7 +53,8 @@ def _get_cells():
     return cells
 
 
-def get_first_cell(numbers, amount=30):
+def get_first_cell(cost_numbers, amount=30):
+    numbers = [str(n) for n in cost_numbers.keys()]
     cells = _get_cells()
     take_number = []
     for num in numbers:
@@ -93,7 +94,5 @@ def get_game_info(game_obj, mult=None):
 
     return {'numbers': numbers,
             'first_line_6': numbers[0:6],
-            'first_18_cell': get_first_cell(cost_numbers, 18),
-            'first_30_cell': get_first_cell(cost_numbers),
             'cost_numbers': cost_numbers,
             }

@@ -3,7 +3,7 @@ from lotto_app.app.serializers import GameSerializer
 from lotto_app.app.models import Game
 from rest_framework.decorators import action
 
-from lotto_app.app.utils import get_game_info
+from lotto_app.app.utils import get_game_info, get_first_cell
 from rest_framework.response import Response
 
 
@@ -35,6 +35,8 @@ class GameModelViewSet(viewsets.ModelViewSet):
             'max_cost': str_total_cost_numbers[89],
             'last_8_numbers': [list(num.keys())[0] for num in str_total_cost_numbers[-8:]],
             'total_cost_numbers': total_cost_numbers,
+            'three_18_cell': get_first_cell(total_cost_numbers, amount=18),
+            'three_30_cell': get_first_cell(total_cost_numbers),
         }
 
     @action(detail=False, url_path='info', methods=['get'])
@@ -49,6 +51,5 @@ class GameModelViewSet(viewsets.ModelViewSet):
     def three_games_info(self, request):
         print('three_games_info/')
         game = request.query_params.get('game')
-        print(game)
         return Response(self.get_three_games_info(game), status=200)
 
