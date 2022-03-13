@@ -6,7 +6,7 @@ from lotto_app.constants import RUS_LOTTO_URL, RUS_LOTTO_HEADERS
 from lotto_app.app.views.games import GameModelViewSet
 from lotto_app.app.models import Game
 
-from lotto_app.app.utils import tickets_from_stoloto, get_game_info, get_first_cell, get_tickets
+from lotto_app.app.utils import tickets_from_stoloto, get_game_info, get_tickets
 
 class PcChoiceViewSet(ViewSet):
     file_choice_ten_tickets = 'file_choice_ten_tickets.json'
@@ -31,24 +31,24 @@ class PcChoiceViewSet(ViewSet):
 
         return {'choice_tickets': choice_tickets,
                 'first_line_6': set(last_game_info['first_line_6']),
+                'first_line_15': set(last_game_info['first_line_15']),
                 'last_8_numbers': set(three_games_info['last_8_numbers']),
-                'three_18_cell': set(three_games_info['three_18_cell']),
                 'three_30_cell': set(three_games_info['three_30_cell']),
                 }
 
     def _ticket_validate_line(self, value, data_validate):
-        if len(set(value['line_1_1']) & data_validate['first_line_6']) < 2\
-                and len(set(value['line_1_2']) & data_validate['first_line_6']) < 2\
-                and len(set(value['line_1_3']) & data_validate['first_line_6']) < 2\
-                and len(set(value['line_2_1']) & data_validate['first_line_6']) < 2\
-                and len(set(value['line_2_2']) & data_validate['first_line_6']) < 2\
-                and len(set(value['line_2_3']) & data_validate['first_line_6']) < 2:
+        if len(set(value['line_1_1']) & data_validate['first_line_6']) < 3\
+                and len(set(value['line_1_2']) & data_validate['first_line_6']) < 3\
+                and len(set(value['line_1_3']) & data_validate['first_line_6']) < 3\
+                and len(set(value['line_2_1']) & data_validate['first_line_6']) < 3\
+                and len(set(value['line_2_2']) & data_validate['first_line_6']) < 3\
+                and len(set(value['line_2_3']) & data_validate['first_line_6']) < 3:
             return True
         return False
 
     def _ticket_validate_cards(self, value, data_validate):
-        if len(set(value['card_1']) & data_validate['three_18_cell']) < 6\
-                and len(set(value['card_2']) & data_validate['three_18_cell']) < 6:
+        if len(set(value['card_1']) & data_validate['first_line_15']) < 6\
+                and len(set(value['card_2']) & data_validate['first_line_15']) < 6:
             return True
         return False
 
@@ -70,11 +70,11 @@ class PcChoiceViewSet(ViewSet):
             print(f'{num_ticket}: Not validate last_8_numbers')
             return False
 
-        if len(set(value['numbers']) & data_validate['three_30_cell']) < 19:
-            print(data_validate['three_30_cell'])
-            print(len(set(value['numbers']) & data_validate['three_30_cell']))
-            print(f'{num_ticket}: Not validate three_30_cell')
-            return False
+        # if len(set(value['numbers']) & data_validate['three_30_cell']) < 19:
+        #     print(data_validate['three_30_cell'])
+        #     print(len(set(value['numbers']) & data_validate['three_30_cell']))
+        #     print(f'{num_ticket}: Not validate three_30_cell')
+        #     return False
         return approved_ticket
 
     @action(detail=False, url_path='choice_ten_tickets', methods=['get'])
@@ -83,7 +83,7 @@ class PcChoiceViewSet(ViewSet):
         data_validate = self._get_data_validate(last_game)
         response_json = data_validate['choice_tickets']
         tickets = {}
-        for i in range(0, 1000):
+        for i in range(0, 5):
             tickets.update(get_tickets(tickets_from_stoloto(RUS_LOTTO_URL, RUS_LOTTO_HEADERS)))
 
         for t, value in tickets.items():
@@ -94,5 +94,4 @@ class PcChoiceViewSet(ViewSet):
                 self._write_file_json(response_json)
                 data_validate['choice_tickets'].update(v)
         print(last_game)
-        print(data_validate['three_30_cell'])
         return Response(response_json, status=200)

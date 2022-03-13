@@ -93,6 +93,7 @@ def get_game_info(game_obj, mult=None):
     cost_numbers = get_cost_numbers(numbers, mult)
 
     return {'numbers': numbers,
-            'first_line_6': numbers[0:6],
+            'first_line_6': [int(n) for n in numbers[0:6]],
+            'first_line_15': [int(n) for n in numbers[0:15]],
             'cost_numbers': cost_numbers,
             }
