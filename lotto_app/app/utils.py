@@ -53,8 +53,11 @@ def _get_cells():
     return cells
 
 
-def get_first_cell(cost_numbers, amount=30):
-    numbers = [str(n) for n in cost_numbers.keys()]
+def get_first_cell(str_numbers=None, cost_numbers=None, amount=30):
+    if str_numbers:
+        numbers = [str(n) for n in str_numbers]
+    else:
+        numbers = [str(n) for n in cost_numbers.keys()]
     cells = _get_cells()
     take_number = []
     for num in numbers:
@@ -86,6 +89,14 @@ def get_first_cell(cost_numbers, amount=30):
     return sorted(take_number)
 
 
+def index_bingo(cost_numbers, bingo):
+    sum = 0
+    print(cost_numbers)
+    for num in bingo:
+        sum = sum + cost_numbers[int(num)]
+        print(num)
+    return sum
+
 def get_game_info(game_obj, mult=None):
     if not mult:
         mult = 1
@@ -96,4 +107,5 @@ def get_game_info(game_obj, mult=None):
             'first_line_6': [int(n) for n in numbers[0:6]],
             'first_line_15': [int(n) for n in numbers[0:15]],
             'cost_numbers': cost_numbers,
+            'bingo_30': get_first_cell(numbers)
             }

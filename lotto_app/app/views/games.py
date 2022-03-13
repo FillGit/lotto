@@ -3,7 +3,7 @@ from lotto_app.app.serializers import GameSerializer
 from lotto_app.app.models import Game
 from rest_framework.decorators import action
 
-from lotto_app.app.utils import get_game_info, get_first_cell
+from lotto_app.app.utils import get_game_info, index_bingo
 from rest_framework.response import Response
 
 
@@ -19,7 +19,8 @@ class GameModelViewSet(viewsets.ModelViewSet):
         all_cost_numbers = {}
         all_info = [get_game_info(Game.objects.get(game=game), 3.5),
                     get_game_info(Game.objects.get(game=int(game) - 1), 1.7),
-                    get_game_info(Game.objects.get(game=int(game) - 2), 1.3)
+                    get_game_info(Game.objects.get(game=int(game) - 2), 1.3),
+                    get_game_info(Game.objects.get(game=int(game) - 3))
                     ]
 
         for num in range(1, 91):
@@ -30,13 +31,13 @@ class GameModelViewSet(viewsets.ModelViewSet):
 
         total_cost_numbers = dict((x, y) for x, y in sorted(all_cost_numbers.items(), key= lambda x: x[1]))
         str_total_cost_numbers = [{k: y} for k, y in total_cost_numbers.items()]
+        bingo_30 = all_info[1]['bingo_30']
         return {
             'min_cost': str_total_cost_numbers[0],
             'max_cost': str_total_cost_numbers[89],
             'last_8_numbers': [list(num.keys())[0] for num in str_total_cost_numbers[-8:]],
             'total_cost_numbers': total_cost_numbers,
-            'three_18_cell': get_first_cell(total_cost_numbers, amount=18),
-            'three_30_cell': get_first_cell(total_cost_numbers),
+            'index_last_game_bingo_30': index_bingo(total_cost_numbers, bingo_30)
         }
 
     @action(detail=False, url_path='info', methods=['get'])

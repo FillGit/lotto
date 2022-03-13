@@ -33,7 +33,6 @@ class PcChoiceViewSet(ViewSet):
                 'first_line_6': set(last_game_info['first_line_6']),
                 'first_line_15': set(last_game_info['first_line_15']),
                 'last_8_numbers': set(three_games_info['last_8_numbers']),
-                'three_30_cell': set(three_games_info['three_30_cell']),
                 }
 
     def _ticket_validate_line(self, value, data_validate):
