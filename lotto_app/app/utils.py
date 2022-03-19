@@ -91,10 +91,8 @@ def get_first_cell(str_numbers=None, cost_numbers=None, amount=30):
 
 def index_bingo(cost_numbers, bingo):
     sum = 0
-    print(cost_numbers)
     for num in bingo:
         sum = sum + cost_numbers[int(num)]
-        print(num)
     return sum
 
 def get_game_info(game_obj, mult=None):

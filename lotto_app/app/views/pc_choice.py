@@ -6,7 +6,7 @@ from lotto_app.constants import RUS_LOTTO_URL, RUS_LOTTO_HEADERS
 from lotto_app.app.views.games import GameModelViewSet
 from lotto_app.app.models import Game
 
-from lotto_app.app.utils import tickets_from_stoloto, get_game_info, get_tickets
+from lotto_app.app.utils import tickets_from_stoloto, get_game_info, get_tickets, index_bingo
 
 class PcChoiceViewSet(ViewSet):
     file_choice_ten_tickets = 'file_choice_ten_tickets.json'
@@ -33,6 +33,7 @@ class PcChoiceViewSet(ViewSet):
                 'first_line_6': set(last_game_info['first_line_6']),
                 'first_line_15': set(last_game_info['first_line_15']),
                 'last_8_numbers': set(three_games_info['last_8_numbers']),
+                'total_cost_numbers': three_games_info['total_cost_numbers']
                 }
 
     def _ticket_validate_line(self, value, data_validate):
@@ -69,11 +70,11 @@ class PcChoiceViewSet(ViewSet):
             print(f'{num_ticket}: Not validate last_8_numbers')
             return False
 
-        # if len(set(value['numbers']) & data_validate['three_30_cell']) < 19:
-        #     print(data_validate['three_30_cell'])
-        #     print(len(set(value['numbers']) & data_validate['three_30_cell']))
-        #     print(f'{num_ticket}: Not validate three_30_cell')
-        #     return False
+        _index = index_bingo(data_validate['total_cost_numbers'], value['numbers'])
+        print(_index)
+        if _index < 8200 or _index > 9200:
+            print(f'{num_ticket}: Not validate _index')
+            return False
         return approved_ticket
 
     @action(detail=False, url_path='choice_ten_tickets', methods=['get'])
