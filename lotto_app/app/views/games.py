@@ -3,7 +3,7 @@ from lotto_app.app.serializers import GameSerializer
 from lotto_app.app.models import Game
 from rest_framework.decorators import action
 
-from lotto_app.app.utils import get_game_info
+from lotto_app.app.utils import get_game_info, index_bingo
 from rest_framework.response import Response
 
 
@@ -19,7 +19,7 @@ class GameModelViewSet(viewsets.ModelViewSet):
         all_cost_numbers = {}
         all_info = [get_game_info(Game.objects.get(game=game), 3.5),
                     get_game_info(Game.objects.get(game=int(game) - 1), 1.7),
-                    get_game_info(Game.objects.get(game=int(game) - 2), 1.3)
+                    get_game_info(Game.objects.get(game=int(game) - 2), 1.3),
                     ]
 
         for num in range(1, 91):
@@ -35,6 +35,9 @@ class GameModelViewSet(viewsets.ModelViewSet):
             'max_cost': str_total_cost_numbers[89],
             'last_8_numbers': [list(num.keys())[0] for num in str_total_cost_numbers[-8:]],
             'total_cost_numbers': total_cost_numbers,
+            'index_bingo_30': index_bingo(total_cost_numbers, all_info[1]['bingo_30']),
+            'total_index_bingo_30': index_bingo(total_cost_numbers,
+                                          [num for num in list(total_cost_numbers.keys())[0:30]])
         }
 
     @action(detail=False, url_path='info', methods=['get'])
@@ -49,6 +52,18 @@ class GameModelViewSet(viewsets.ModelViewSet):
     def three_games_info(self, request):
         print('three_games_info/')
         game = request.query_params.get('game')
-        print(game)
         return Response(self.get_three_games_info(game), status=200)
+
+
+    @action(detail=False, url_path='index_bingo_30', methods=['get'])
+    def index_bingo_30(self, request):
+        print('index_bingo_30/')
+        game = request.query_params.get('game')
+        game_obj = Game.objects.get(game=game)
+        last_total_cost_numbers = self.get_three_games_info(int(game)-1)['total_cost_numbers']
+        game_info = get_game_info(game_obj)
+        indexes = {
+            'index_bingo': index_bingo(last_total_cost_numbers, game_info['bingo_30']),
+        }
+        return Response(indexes,status=200)
 
