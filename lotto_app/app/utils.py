@@ -53,7 +53,14 @@ def _get_cells():
     return cells
 
 
-def get_first_cell(str_numbers=None, cost_numbers=None, amount=30):
+def _get_nominal(number):
+    nominal = 0 if len(number) == 1 else int(number[0])
+    if nominal == 9:
+        nominal = 8
+    return nominal
+
+
+def get_bingo_30(str_numbers=None, cost_numbers=None, amount=30):
     if str_numbers:
         numbers = [str(n) for n in str_numbers]
     else:
@@ -61,9 +68,7 @@ def get_first_cell(str_numbers=None, cost_numbers=None, amount=30):
     cells = _get_cells()
     take_number = []
     for num in numbers:
-        nominal = 0 if len(num) == 1 else int(num[0])
-        if nominal == 9:
-            nominal = 8
+        nominal = _get_nominal(num)
         num = int(num)
         if len(cells[nominal]['nominal_numbers']) < 3 and num in cells[nominal]['kit']:
             cells[nominal]['nominal_numbers'].append(num)
@@ -75,9 +80,7 @@ def get_first_cell(str_numbers=None, cost_numbers=None, amount=30):
         return sorted(take_number[0:amount])
 
     for num in numbers:
-        nominal = int(num) if len(num) == 1 else int(num[0])
-        if nominal == 9:
-            nominal = 8
+        nominal = _get_nominal(num)
         num = int(num)
         if num not in take_number and len(cells[nominal]['nominal_numbers']) < 4 \
                 and num in cells[nominal]['kit']:
@@ -95,6 +98,25 @@ def index_bingo(cost_numbers, bingo):
         sum = sum + cost_numbers[int(num)]
     return sum
 
+
+def index_9_parts(cost_numbers, bingo):
+    sum_9_parts = {}
+    _9_parts = {n:[v, None] for n, v  in cost_numbers.items()}
+
+    i = 0
+    for num, v in _9_parts.items():
+        _9_parts[num][1] = _get_nominal(str(i))
+        i += 1
+
+    for num in bingo:
+        nominal = _9_parts[num][1]
+        if nominal not in sum_9_parts:
+            sum_9_parts[nominal] = 0
+        sum_9_parts[nominal] += 1
+
+    return dict((x, y) for x, y in sorted(sum_9_parts.items(), key=lambda x: x[0]))
+
+
 def get_game_info(game_obj, mult=None):
     if not mult:
         mult = 1
@@ -105,5 +127,5 @@ def get_game_info(game_obj, mult=None):
             'first_line_6': [int(n) for n in numbers[0:6]],
             'first_line_15': [int(n) for n in numbers[0:15]],
             'cost_numbers': cost_numbers,
-            'bingo_30': get_first_cell(numbers)
+            'bingo_30': get_bingo_30(numbers)
             }

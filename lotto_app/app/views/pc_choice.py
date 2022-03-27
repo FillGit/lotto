@@ -6,7 +6,14 @@ from lotto_app.constants import RUS_LOTTO_URL, RUS_LOTTO_HEADERS
 from lotto_app.app.views.games import GameModelViewSet
 from lotto_app.app.models import Game
 
-from lotto_app.app.utils import tickets_from_stoloto, get_game_info, get_tickets, index_bingo
+from lotto_app.app.utils import (
+    tickets_from_stoloto,
+    get_game_info,
+    get_tickets,
+    index_bingo,
+    index_9_parts
+)
+
 
 class PcChoiceViewSet(ViewSet):
     file_choice_ten_tickets = 'file_choice_ten_tickets.json'
@@ -52,6 +59,44 @@ class PcChoiceViewSet(ViewSet):
             return True
         return False
 
+    def _ticket_9_parts(self, total_cost_numbers, numbers):
+        sum_9_parts = index_9_parts(total_cost_numbers, numbers)
+        print(sum_9_parts)
+        for i in range(0, 9):
+            if i not in sum_9_parts:
+                return True
+
+        if sum_9_parts[0] not in [4, 5, 6]:
+            return True
+        if sum_9_parts[1] not in [3, 4, 5, 6]:
+            return True
+        if sum_9_parts[2] not in [3, 4, 5]:
+            return True
+        if sum_9_parts[3] not in [3, 4, 5]:
+            return True
+        if sum_9_parts[4] not in [2, 3, 4, 5]:
+            return True
+        if sum_9_parts[5] not in [2, 3, 4, 5]:
+            return True
+        if sum_9_parts[6] not in [2, 3, 4, 5]:
+            return True
+        if sum_9_parts[7] not in [3, 4, 5]:
+            return True
+        if sum_9_parts[8] not in [4, 5]:
+            return True
+        return False
+
+    def _ticket_repeat_numbers(self, choice_tickets, numbers):
+        set_numbers = set()
+        for ticket, v in choice_tickets.items():
+            set_numbers.update(v[1])
+
+        if len(set_numbers & set(numbers)) > 5:
+            print('ticket repeat numbers: ', len(set_numbers & set(numbers)))
+            return True
+
+        return False
+
     def _ticket_validate(self, num_ticket, value, data_validate):
         approved_ticket = num_ticket
 
@@ -66,15 +111,20 @@ class PcChoiceViewSet(ViewSet):
             print(f'{num_ticket}: Not validate cards')
             return False
 
-        if len(set(value['numbers']) & data_validate['last_8_numbers']) > 2:
-            print(f'{num_ticket}: Not validate last_8_numbers')
-            return False
-
         _index = index_bingo(data_validate['total_cost_numbers'], value['numbers'])
         print(_index)
         if _index < 8200 or _index > 9200:
             print(f'{num_ticket}: Not validate _index')
             return False
+
+        if self._ticket_9_parts(data_validate['total_cost_numbers'], value['numbers']):
+            print(f'{num_ticket}: Not validate ticket_9_parts')
+            return False
+
+        if self._ticket_repeat_numbers(data_validate['choice_tickets'], value['numbers']):
+            print(f'{num_ticket}: Not validate ticket repeat numbers')
+            return False
+
         return approved_ticket
 
     @action(detail=False, url_path='choice_ten_tickets', methods=['get'])
@@ -83,13 +133,12 @@ class PcChoiceViewSet(ViewSet):
         data_validate = self._get_data_validate(last_game)
         response_json = data_validate['choice_tickets']
         tickets = {}
-        for i in range(0, 5):
+        for i in range(0, 500):
             tickets.update(get_tickets(tickets_from_stoloto(RUS_LOTTO_URL, RUS_LOTTO_HEADERS)))
 
         for t, value in tickets.items():
-            approved_ticket = self._ticket_validate(t, value, data_validate)
-            if approved_ticket:
-                v = {t: value['line_1_1'] + value['line_1_2'][0:2]}
+            if self._ticket_validate(t, value, data_validate):
+                v = {t: [value['line_1_1'] + value['line_1_2'][0:2], value['numbers']]}
                 response_json.update(v)
                 self._write_file_json(response_json)
                 data_validate['choice_tickets'].update(v)
