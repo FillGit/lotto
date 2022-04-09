@@ -61,9 +61,11 @@ class GameModelViewSet(viewsets.ModelViewSet):
         game_obj = Game.objects.get(game=game)
         last_total_cost_numbers = self.get_three_games_info(int(game)-1)['total_cost_numbers']
         game_info = get_game_info(game_obj)
+        null_numbers = {num: last_total_cost_numbers[int(num)] for num, v in game_info['cost_numbers'].items() if v==0}
         indexes = {
             'index_bingo': index_bingo(last_total_cost_numbers, game_info['bingo_30']),
-            'index_9_parts': index_9_parts(last_total_cost_numbers, game_info['bingo_30'])
+            'index_9_parts': index_9_parts(last_total_cost_numbers, game_info['bingo_30']),
+            'null_numbers': null_numbers,
         }
         return Response(indexes,status=200)
 
