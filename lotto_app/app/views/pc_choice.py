@@ -66,23 +66,23 @@ class PcChoiceViewSet(ViewSet):
             if i not in sum_9_parts:
                 return True
 
-        if sum_9_parts[0] not in [4, 5, 6]:
+        if sum_9_parts[0] not in [3, 4]:
             return True
-        if sum_9_parts[1] not in [3, 4, 5, 6]:
+        if sum_9_parts[1] not in [4, 5]:
             return True
-        if sum_9_parts[2] not in [3, 4, 5]:
+        if sum_9_parts[2] not in [2, 3, 4]:
             return True
-        if sum_9_parts[3] not in [3, 4, 5]:
+        if sum_9_parts[3] not in [2, 3]:
             return True
-        if sum_9_parts[4] not in [2, 3, 4, 5]:
+        if sum_9_parts[4] not in [4, 5]:
             return True
-        if sum_9_parts[5] not in [2, 3, 4, 5]:
+        if sum_9_parts[5] not in [2, 3, 4]:
             return True
-        if sum_9_parts[6] not in [2, 3, 4, 5]:
+        if sum_9_parts[6] not in [2, 3, 4]:
             return True
         if sum_9_parts[7] not in [3, 4, 5]:
             return True
-        if sum_9_parts[8] not in [4, 5]:
+        if sum_9_parts[8] not in [3, 4]:
             return True
         return False
 
@@ -91,7 +91,7 @@ class PcChoiceViewSet(ViewSet):
         for ticket, v in choice_tickets.items():
             set_numbers.update(v[1])
 
-        if len(set_numbers & set(numbers)) > 5:
+        if len(set_numbers & set(numbers)) > 7:
             print('ticket repeat numbers: ', len(set_numbers & set(numbers)))
             return True
 
@@ -113,7 +113,7 @@ class PcChoiceViewSet(ViewSet):
 
         _index = index_bingo(data_validate['total_cost_numbers'], value['numbers'])
         print(_index)
-        if _index < 8200 or _index > 9200:
+        if _index < 8300 or _index > 9000:
             print(f'{num_ticket}: Not validate _index')
             return False
 
