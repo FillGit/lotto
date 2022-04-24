@@ -69,3 +69,21 @@ class GameModelViewSet(viewsets.ModelViewSet):
         }
         return Response(indexes,status=200)
 
+    @action(detail=False, url_path='value_previous_games', methods=['get'])
+    def value_previous_games(self, request):
+        print('value_previous_games/')
+        how_many = int(request.query_params.get('how_many'))
+        previous_games = int(request.query_params.get('previous_games'))
+        current_game = int(request.query_params.get('current_game'))
+        number_info = []
+        for game in range(current_game - previous_games + 1, current_game + 1):
+            print(game)
+            number_info.append(get_game_info(Game.objects.get(game=int(game)))['numbers'][:how_many])
+
+        all = {str(i): 0 for i in range(1, 91)}
+        for _info in number_info:
+            for num in _info:
+                all[num] += 1
+
+        return Response(all, status=200)
+
