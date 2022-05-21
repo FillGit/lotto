@@ -15,28 +15,32 @@ class GameModelViewSet(viewsets.ModelViewSet):
         return Game.objects.get(game=self.kwargs['pk'])
 
     @staticmethod
-    def get_three_games_info(game):
+    def get_five_games_info(game):
         all_cost_numbers = {}
-        all_info = [get_game_info(Game.objects.get(game=game), 3.5),
-                    get_game_info(Game.objects.get(game=int(game) - 1), 1.7),
-                    get_game_info(Game.objects.get(game=int(game) - 2), 1.3),
+        all_info = [get_game_info(Game.objects.get(game=game), 1.4),
+                    get_game_info(Game.objects.get(game=int(game) - 1), 1.3),
+                    get_game_info(Game.objects.get(game=int(game) - 2), 1.2),
+                    get_game_info(Game.objects.get(game=int(game) - 3), 1.1),
+                    get_game_info(Game.objects.get(game=int(game) - 4), 1.0),
                     ]
 
         for num in range(1, 91):
             snum = str(num)
             all_cost_numbers[num] = all_info[0]['cost_numbers'][snum] + \
                                     all_info[1]['cost_numbers'][snum] + \
-                                    all_info[2]['cost_numbers'][snum]
+                                    all_info[2]['cost_numbers'][snum] + \
+                                    all_info[3]['cost_numbers'][snum] + \
+                                    all_info[4]['cost_numbers'][snum]
 
         total_cost_numbers = dict((x, y) for x, y in sorted(all_cost_numbers.items(), key= lambda x: x[1]))
         str_total_cost_numbers = [{k: y} for k, y in total_cost_numbers.items()]
         return {
             'min_cost': str_total_cost_numbers[0],
             'max_cost': str_total_cost_numbers[89],
-            'last_8_numbers': [list(num.keys())[0] for num in str_total_cost_numbers[-8:]],
+            'last_8_numbers': [list(num.keys())[0] for num in str_total_cost_numbers[-17:]],
             'total_cost_numbers': total_cost_numbers,
             'total_index_bingo_30': index_bingo(total_cost_numbers,
-                                          [num for num in list(total_cost_numbers.keys())[0:30]])
+                                                [num for num in list(total_cost_numbers.keys())[0:30]])
         }
 
     @action(detail=False, url_path='info', methods=['get'])
@@ -47,11 +51,11 @@ class GameModelViewSet(viewsets.ModelViewSet):
         return Response(get_game_info(game_obj), status=200)
 
 
-    @action(detail=False, url_path='three_games_info', methods=['get'])
-    def three_games_info(self, request):
-        print('three_games_info/')
+    @action(detail=False, url_path='five_games_info', methods=['get'])
+    def five_games_info(self, request):
+        print('five_games_info/')
         game = request.query_params.get('game')
-        return Response(self.get_three_games_info(game), status=200)
+        return Response(self.get_five_games_info(game), status=200)
 
 
     @action(detail=False, url_path='index_bingo_30', methods=['get'])
@@ -59,7 +63,7 @@ class GameModelViewSet(viewsets.ModelViewSet):
         print('index_bingo_30/')
         game = request.query_params.get('game')
         game_obj = Game.objects.get(game=game)
-        last_total_cost_numbers = self.get_three_games_info(int(game)-1)['total_cost_numbers']
+        last_total_cost_numbers = self.get_five_games_info(int(game)-1)['total_cost_numbers']
         game_info = get_game_info(game_obj)
         null_numbers = {num: last_total_cost_numbers[int(num)] for num, v in game_info['cost_numbers'].items() if v==0}
         indexes = {
