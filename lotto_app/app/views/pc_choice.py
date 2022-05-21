@@ -32,15 +32,15 @@ class PcChoiceViewSet(ViewSet):
 
     def _get_data_validate(self, last_game):
         last_game_obj = Game.objects.get(game=last_game)
-        three_games_info = GameModelViewSet.get_three_games_info(last_game)
+        five_games_info = GameModelViewSet.get_five_games_info(last_game)
         last_game_info = get_game_info(last_game_obj)
         choice_tickets = self._read_file_json()
 
         return {'choice_tickets': choice_tickets,
                 'first_line_6': set(last_game_info['first_line_6']),
                 'first_line_15': set(last_game_info['first_line_15']),
-                'last_8_numbers': set(three_games_info['last_8_numbers']),
-                'total_cost_numbers': three_games_info['total_cost_numbers']
+                'last_8_numbers': set(five_games_info['last_8_numbers']),
+                'total_cost_numbers': five_games_info['total_cost_numbers']
                 }
 
     def _ticket_validate_line(self, value, data_validate):
@@ -91,7 +91,7 @@ class PcChoiceViewSet(ViewSet):
         for ticket, v in choice_tickets.items():
             set_numbers.update(v[1])
 
-        if len(set_numbers & set(numbers)) > 20:
+        if len(set_numbers & set(numbers)) > 10:
             print('ticket repeat numbers: ', len(set_numbers & set(numbers)))
             return True
 
@@ -107,34 +107,31 @@ class PcChoiceViewSet(ViewSet):
             print(f'{num_ticket}: Not validate first_line_6')
             return False
 
-        if not self._ticket_validate_cards(value, data_validate):
-            print(f'{num_ticket}: Not validate cards')
-            return False
+        # if not self._ticket_validate_cards(value, data_validate):
+        #     print(f'{num_ticket}: Not validate cards')
+        #     return False
 
         _index = index_bingo(data_validate['total_cost_numbers'], value['numbers'])
         print(_index)
-        # if _index < 8200 or _index > 9400:
-        #     print(f'{num_ticket}: Not validate _index')
-        #     return False
+        if _index < 7400 or _index > 8400:
+            print(f'{num_ticket}: Not validate _index')
+            return False
 
         # if self._ticket_9_parts(data_validate['total_cost_numbers'], value['numbers']):
         #     print(f'{num_ticket}: Not validate ticket_9_parts')
         #     return False
 
-        # if self._ticket_repeat_numbers(data_validate['choice_tickets'], value['numbers']):
-        #     print(f'{num_ticket}: Not validate ticket repeat numbers')
-        #     return False
+        if self._ticket_repeat_numbers(data_validate['choice_tickets'], value['numbers']):
+            print(f'{num_ticket}: Not validate ticket repeat numbers')
+            return False
 
         print(set(value['numbers']) )
-        if len((set(value['numbers']) & {45, 74})) != 2:
+
+        if len((set(value['numbers']) & {})) <= 9:
             print(f'{num_ticket}: Not validate ticket 1 ... 90')
             return False
 
-        if len((set(value['numbers']) & {19, 20, 33, 25, 27, 85})) <= 2:
-            print(f'{num_ticket}: Not validate ticket 1 ... 90')
-            return False
-
-        if len((set(value['numbers']) & {5, 7, 8, 12, 31, 57, 61, 68, 79, 83})) > 0:
+        if len((set(value['numbers']) & {})) >= 4:
             print(f'{num_ticket}: Not validate bad numbers')
             return False
 
@@ -146,14 +143,16 @@ class PcChoiceViewSet(ViewSet):
         data_validate = self._get_data_validate(last_game)
         response_json = data_validate['choice_tickets']
         tickets = {}
-        for i in range(0, 500):
+        for i in range(0, 1500):
             tickets.update(get_tickets(tickets_from_stoloto(RUS_LOTTO_URL, RUS_LOTTO_HEADERS)))
 
         for t, value in tickets.items():
             if self._ticket_validate(t, value, data_validate):
-                v = {t: [value['line_1_1'] + value['line_1_2'][0:2], value['numbers']]}
+                _index = index_bingo(data_validate['total_cost_numbers'], value['numbers'])
+                v = {t: [_index, value['line_1_1'] + value['line_1_2'][0:2], value['numbers']]}
                 response_json.update(v)
                 self._write_file_json(response_json)
                 data_validate['choice_tickets'].update(v)
+
         print(last_game)
         return Response(response_json, status=200)
