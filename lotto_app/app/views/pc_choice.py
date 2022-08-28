@@ -53,11 +53,11 @@ class PcChoiceViewSet(ViewSet):
             return True
         return False
 
-    def _ticket_validate_cards(self, value, data_validate):
-        if len(set(value['card_1']) & data_validate['first_line_15']) < 6\
-                and len(set(value['card_2']) & data_validate['first_line_15']) < 6:
-            return True
-        return False
+    # def _ticket_validate_cards(self, value, data_validate):
+    #     if len(set(value['card_1']) & data_validate['first_line_15']) < 6\
+    #             and len(set(value['card_2']) & data_validate['first_line_15']) < 6:
+    #         return True
+    #     return False
 
     def _ticket_9_parts(self, total_cost_numbers, numbers):
         sum_9_parts = index_9_parts(total_cost_numbers, numbers)
@@ -91,7 +91,7 @@ class PcChoiceViewSet(ViewSet):
         for ticket, v in choice_tickets.items():
             set_numbers.update(v[1])
 
-        if len(set_numbers & set(numbers)) > 10:
+        if len(set_numbers & set(numbers)) > 14:
             print('ticket repeat numbers: ', len(set_numbers & set(numbers)))
             return True
 
@@ -127,11 +127,11 @@ class PcChoiceViewSet(ViewSet):
 
         print(set(value['numbers']) )
 
-        if len((set(value['numbers']) & {})) <= 9:
+        if len((set(value['numbers']) & {1, 2})) <= 8:
             print(f'{num_ticket}: Not validate ticket 1 ... 90')
             return False
 
-        if len((set(value['numbers']) & {})) >= 4:
+        if len((set(value['numbers']) & {3, 4})) >= 4:
             print(f'{num_ticket}: Not validate bad numbers')
             return False
 
