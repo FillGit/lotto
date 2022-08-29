@@ -14,6 +14,10 @@ class GameModelViewSet(viewsets.ModelViewSet):
     def get_object(self):
         return Game.objects.get(game=self.kwargs['pk'])
 
+    def game_request(self, request):
+        game = request.query_params.get('game')
+        return game, Game.objects.get(game=game)
+
     @staticmethod
     def get_five_games_info(game):
         all_cost_numbers = {}
@@ -46,8 +50,7 @@ class GameModelViewSet(viewsets.ModelViewSet):
     @action(detail=False, url_path='info', methods=['get'])
     def info(self, request):
         print('info/')
-        game = request.query_params.get('game')
-        game_obj = Game.objects.get(game=game)
+        game, game_obj = self.game_request(request)
         return Response(get_game_info(game_obj), status=200)
 
 
@@ -80,8 +83,7 @@ class GameModelViewSet(viewsets.ModelViewSet):
     @action(detail=False, url_path='index_bingo_30', methods=['get'])
     def index_bingo_30(self, request):
         print('index_bingo_30/')
-        game = request.query_params.get('game')
-        game_obj = Game.objects.get(game=game)
+        game, game_obj = self.game_request(request)
         last_total_cost_numbers = self.get_five_games_info(int(game)-1)['total_cost_numbers']
         game_info = get_game_info(game_obj)
         null_numbers = {num: last_total_cost_numbers[int(num)] for num, v in game_info['cost_numbers'].items() if v==0}

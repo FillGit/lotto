@@ -66,23 +66,23 @@ class PcChoiceViewSet(ViewSet):
             if i not in sum_9_parts:
                 return True
 
-        if sum_9_parts[0] not in [3, 4, 5, 6, 7]:
+        if sum_9_parts[0] not in [3, 4, 5]:
             return True
-        if sum_9_parts[1] not in [3, 4, 5, 6, 7]:
+        if sum_9_parts[1] not in [3, 4, 5]:
             return True
-        if sum_9_parts[2] not in [3, 4, 5, 6, 7]:
+        if sum_9_parts[2] not in [3, 4, 5]:
             return True
-        if sum_9_parts[3] not in [2, 3, 4, 5]:
+        if sum_9_parts[3] not in [2, 3, 4]:
             return True
-        if sum_9_parts[4] not in [2, 3, 4, 5]:
+        if sum_9_parts[4] not in [2, 3, 4]:
             return True
-        if sum_9_parts[5] not in [2, 3, 4, 5]:
+        if sum_9_parts[5] not in [2, 3, 4]:
             return True
-        if sum_9_parts[6] not in [2, 3, 4]:
+        if sum_9_parts[6] not in [1, 2, 3]:
             return True
-        if sum_9_parts[7] not in [2, 3, 4]:
+        if sum_9_parts[7] not in [1, 2, 3]:
             return True
-        if sum_9_parts[8] not in [2, 3, 4]:
+        if sum_9_parts[8] not in [1, 2, 3]:
             return True
         return False
 
