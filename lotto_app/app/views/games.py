@@ -57,6 +57,25 @@ class GameModelViewSet(viewsets.ModelViewSet):
         game = request.query_params.get('game')
         return Response(self.get_five_games_info(game), status=200)
 
+    def _condition_numbers(self, how_many, previous_games, current_game, condition):
+        return {int(num) for num, value in self._value_previous_games(how_many, previous_games, current_game).items()
+                if value == condition}
+
+    def _get_good_numbers(self, current_game):
+        good_numbers = self._condition_numbers(45, 5, current_game, 0)
+        good_numbers.update(self._condition_numbers(40, 5, current_game, 0))
+        good_numbers.update(self._condition_numbers(45, 3, current_game, 0))
+        good_numbers.update(self._condition_numbers(40, 3, current_game, 0))
+        return good_numbers
+
+    def _get_bad_numbers(self, current_game):
+        bad_numbers = self._condition_numbers(45, 5, current_game, 5)
+        bad_numbers.update(self._condition_numbers(40, 5, current_game, 5))
+        bad_numbers.update(self._condition_numbers(45, 5, current_game, 4))
+        bad_numbers.update(self._condition_numbers(45, 3, current_game, 3))
+        bad_numbers.update(self._condition_numbers(40, 3, current_game, 3))
+        return bad_numbers
+
 
     @action(detail=False, url_path='index_bingo_30', methods=['get'])
     def index_bingo_30(self, request):
@@ -69,9 +88,23 @@ class GameModelViewSet(viewsets.ModelViewSet):
         indexes = {
             'index_bingo': index_bingo(last_total_cost_numbers, game_info['bingo_30']),
             'index_9_parts': index_9_parts(last_total_cost_numbers, game_info['bingo_30']),
+            'good_numbers': self._get_good_numbers(int(game)),
+            'bad_numbers': self._get_bad_numbers(int(game)),
             'null_numbers': null_numbers,
         }
         return Response(indexes,status=200)
+
+    def _value_previous_games(self, how_many, previous_games, current_game):
+        value_previous_games = {str(i): 0 for i in range(1, 91)}
+        number_info = []
+        for game in range(current_game - previous_games + 1, current_game + 1):
+            print(game)
+            number_info.append(get_game_info(Game.objects.get(game=int(game)))['numbers'][:how_many])
+
+        for _info in number_info:
+            for num in _info:
+                value_previous_games[num] += 1
+        return value_previous_games
 
     @action(detail=False, url_path='value_previous_games', methods=['get'])
     def value_previous_games(self, request):
@@ -79,15 +112,6 @@ class GameModelViewSet(viewsets.ModelViewSet):
         how_many = int(request.query_params.get('how_many'))
         previous_games = int(request.query_params.get('previous_games'))
         current_game = int(request.query_params.get('current_game'))
-        number_info = []
-        for game in range(current_game - previous_games + 1, current_game + 1):
-            print(game)
-            number_info.append(get_game_info(Game.objects.get(game=int(game)))['numbers'][:how_many])
-
-        all = {str(i): 0 for i in range(1, 91)}
-        for _info in number_info:
-            for num in _info:
-                all[num] += 1
-
-        return Response(all, status=200)
+        return Response(self._value_previous_games(how_many, previous_games, current_game),
+                        status=200)
 
