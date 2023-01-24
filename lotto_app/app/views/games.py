@@ -7,7 +7,7 @@ from lotto_app.app.utils import get_game_info, index_bingo, index_9_parts
 from rest_framework.response import Response
 
 
-class GameModelViewSet(viewsets.ModelViewSet):
+class GameViewSet(viewsets.ModelViewSet):
     queryset = Game.objects.all()
     serializer_class = GameSerializer
 
@@ -53,7 +53,6 @@ class GameModelViewSet(viewsets.ModelViewSet):
         game, game_obj = self.game_request(request)
         return Response(get_game_info(game_obj), status=200)
 
-
     @action(detail=False, url_path='five_games_info', methods=['get'])
     def five_games_info(self, request):
         print('five_games_info/')
@@ -78,7 +77,6 @@ class GameModelViewSet(viewsets.ModelViewSet):
         bad_numbers.update(self._condition_numbers(45, 3, current_game, 3))
         bad_numbers.update(self._condition_numbers(40, 3, current_game, 3))
         return bad_numbers
-
 
     @action(detail=False, url_path='index_bingo_30', methods=['get'])
     def index_bingo_30(self, request):
@@ -116,4 +114,3 @@ class GameModelViewSet(viewsets.ModelViewSet):
         current_game = int(request.query_params.get('current_game'))
         return Response(self._value_previous_games(how_many, previous_games, current_game),
                         status=200)
-

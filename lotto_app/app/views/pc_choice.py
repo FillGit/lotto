@@ -3,7 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 from lotto_app.constants import RUS_LOTTO_URL, RUS_LOTTO_HEADERS
-from lotto_app.app.views.games import GameModelViewSet
+from lotto_app.app.views.games import GameViewSet
 from lotto_app.app.models import Game
 
 from lotto_app.app.utils import (
@@ -32,7 +32,7 @@ class PcChoiceViewSet(ViewSet):
 
     def _get_data_validate(self, last_game):
         last_game_obj = Game.objects.get(game=last_game)
-        five_games_info = GameModelViewSet.get_five_games_info(last_game)
+        five_games_info = GameViewSet.get_five_games_info(last_game)
         last_game_info = get_game_info(last_game_obj)
         choice_tickets = self._read_file_json()
 
