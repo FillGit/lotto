@@ -1,5 +1,4 @@
-from django.urls import include, path
-from django.conf.urls import url
+from django.urls import include, path, re_path as url
 from rest_framework.routers import DefaultRouter
 from lotto_app.app import views
 
@@ -7,7 +6,9 @@ router = DefaultRouter()
 router.register(r'users', views.UserViewSet)
 router.register(r'groups', views.GroupViewSet)
 
-router.register(r'game', views.GameModelViewSet, basename='game')
+router.register(r'game', views.GameViewSet, basename='game')
+router.register(r'state_numbers', views.StateNumbersViewSet, basename='state_numbers')
+
 router.register(r'tickets', views.TicketViewSet, basename='tickets')
 router.register(r'pc_choice', views.PcChoiceViewSet, basename='pc_choice')
 

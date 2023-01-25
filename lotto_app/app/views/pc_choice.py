@@ -3,7 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 from lotto_app.constants import RUS_LOTTO_URL, RUS_LOTTO_HEADERS
-from lotto_app.app.views.games import GameModelViewSet
+from lotto_app.app.views.games import GameViewSet
 from lotto_app.app.models import Game
 
 from lotto_app.app.utils import (
@@ -32,7 +32,7 @@ class PcChoiceViewSet(ViewSet):
 
     def _get_data_validate(self, last_game):
         last_game_obj = Game.objects.get(game=last_game)
-        five_games_info = GameModelViewSet.get_five_games_info(last_game)
+        five_games_info = GameViewSet.get_five_games_info(last_game)
         last_game_info = get_game_info(last_game_obj)
         choice_tickets = self._read_file_json()
 
@@ -66,23 +66,23 @@ class PcChoiceViewSet(ViewSet):
             if i not in sum_9_parts:
                 return True
 
-        if sum_9_parts[0] not in [3, 4, 5, 6, 7]:
+        if sum_9_parts[0] not in [3, 4, 5]:
             return True
-        if sum_9_parts[1] not in [3, 4, 5, 6, 7]:
+        if sum_9_parts[1] not in [3, 4, 5]:
             return True
-        if sum_9_parts[2] not in [3, 4, 5, 6, 7]:
+        if sum_9_parts[2] not in [3, 4, 5]:
             return True
-        if sum_9_parts[3] not in [2, 3, 4, 5]:
+        if sum_9_parts[3] not in [2, 3, 4]:
             return True
-        if sum_9_parts[4] not in [2, 3, 4, 5]:
+        if sum_9_parts[4] not in [2, 3, 4]:
             return True
-        if sum_9_parts[5] not in [2, 3, 4, 5]:
+        if sum_9_parts[5] not in [2, 3, 4]:
             return True
-        if sum_9_parts[6] not in [2, 3, 4]:
+        if sum_9_parts[6] not in [1, 2, 3]:
             return True
-        if sum_9_parts[7] not in [2, 3, 4]:
+        if sum_9_parts[7] not in [1, 2, 3]:
             return True
-        if sum_9_parts[8] not in [2, 3, 4]:
+        if sum_9_parts[8] not in [1, 2, 3]:
             return True
         return False
 
