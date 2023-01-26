@@ -23,3 +23,16 @@ class StateNumbers(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['game_obj', 'number'], name='not unique game and number')
         ]
+
+class LottoTickets(models.Model):
+    game_obj = models.ForeignKey(Game, on_delete = models.CASCADE)
+    ticket_number = models.CharField(max_length=20)
+    first_seven_numbers = models.CharField(max_length=20)
+    ticket_all_numbers = models.CharField(max_length=500)
+    taken_ticket = models.BooleanField(default=False)
+
+    constraints = [
+        models.UniqueConstraint(fields=['game_obj', 'ticket_number'],
+                                name='not unique game and ticket_number')
+    ]
+
