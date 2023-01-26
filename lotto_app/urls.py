@@ -12,6 +12,8 @@ router.register(r'state_numbers', views.StateNumbersViewSet, basename='state_num
 router.register(r'tickets', views.TicketViewSet, basename='tickets')
 router.register(r'pc_choice', views.PcChoiceViewSet, basename='pc_choice')
 
+router.register(r'lotto_tickets', views.LottoTicketsViewSet, basename='lotto_tickets')
+
 # Wire up our API using automatic URL routing.
 # Additionally, we include login URLs for the browsable API.
 urlpatterns = [

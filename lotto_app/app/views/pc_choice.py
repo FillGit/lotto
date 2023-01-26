@@ -2,7 +2,7 @@ import json
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
-from lotto_app.constants import RUS_LOTTO_URL, RUS_LOTTO_HEADERS
+from lotto_app.constants import LOTTO_URL, LOTTO_HEADERS
 from lotto_app.app.views.games import GameViewSet
 from lotto_app.app.models import Game
 
@@ -144,7 +144,7 @@ class PcChoiceViewSet(ViewSet):
         response_json = data_validate['choice_tickets']
         tickets = {}
         for i in range(0, 1500):
-            tickets.update(get_tickets(tickets_from_stoloto(RUS_LOTTO_URL, RUS_LOTTO_HEADERS)))
+            tickets.update(get_tickets(tickets_from_stoloto(LOTTO_URL, LOTTO_HEADERS)))
 
         for t, value in tickets.items():
             if self._ticket_validate(t, value, data_validate):
