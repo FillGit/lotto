@@ -1,18 +1,13 @@
 import json
+
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
-from lotto_app.app.views.games import GameViewSet
-from lotto_app.app.models import Game
-from lotto_app.config import get_from_config, get_section_from_config
 
-from lotto_app.app.utils import (
-    tickets_from_stoloto,
-    get_game_info,
-    get_tickets,
-    index_bingo,
-    index_9_parts
-)
+from lotto_app.app.models import Game
+from lotto_app.app.utils import get_game_info, get_tickets, index_9_parts, index_bingo, tickets_from_stoloto
+from lotto_app.app.views.games import GameViewSet
+from lotto_app.config import get_from_config, get_section_from_config
 
 
 class PcChoiceViewSet(ViewSet):

@@ -1,8 +1,8 @@
-from rest_framework import viewsets
-from lotto_app.app.models import Game, StateNumbers
+from rest_framework import status, viewsets
 from rest_framework.response import Response
+
+from lotto_app.app.models import Game, StateNumbers
 from lotto_app.app.serializers import StateNumberSerializer
-from rest_framework import status
 
 
 class StateNumbersViewSet(viewsets.ModelViewSet):

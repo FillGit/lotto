@@ -1,10 +1,10 @@
 from rest_framework import viewsets
-from lotto_app.app.serializers import GameSerializer
-from lotto_app.app.models import Game
 from rest_framework.decorators import action
-
-from lotto_app.app.utils import get_game_info, index_bingo, index_9_parts
 from rest_framework.response import Response
+
+from lotto_app.app.models import Game
+from lotto_app.app.serializers import GameSerializer
+from lotto_app.app.utils import get_game_info, index_9_parts, index_bingo
 
 
 class GameViewSet(viewsets.ModelViewSet):
