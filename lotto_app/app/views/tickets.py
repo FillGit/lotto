@@ -1,9 +1,9 @@
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
-from lotto_app.config import get_from_config, get_section_from_config
 
-from lotto_app.app.utils import tickets_from_stoloto, get_tickets
+from lotto_app.app.utils import get_tickets, tickets_from_stoloto
+from lotto_app.config import get_from_config, get_section_from_config
 
 LOTTO_URL = get_from_config('lotto_url', 'url')
 LOTTO_HEADERS = get_section_from_config('lotto_headers')

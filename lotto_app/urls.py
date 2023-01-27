@@ -1,5 +1,7 @@
-from django.urls import include, path, re_path as url
+from django.urls import include, path
+from django.urls import re_path as url
 from rest_framework.routers import DefaultRouter
+
 from lotto_app.app import views
 
 router = DefaultRouter()

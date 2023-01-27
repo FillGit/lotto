@@ -1,7 +1,8 @@
-from django.contrib.auth.models import User, Group
-from rest_framework import viewsets
-from rest_framework import permissions
-from lotto_app.app.serializers import UserSerializer, GroupSerializer
+from django.contrib.auth.models import Group, User
+from rest_framework import permissions, viewsets
+
+from lotto_app.app.serializers import GroupSerializer, UserSerializer
+
 
 class UserViewSet(viewsets.ModelViewSet):
     """

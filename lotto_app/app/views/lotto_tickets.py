@@ -1,13 +1,11 @@
-from rest_framework import viewsets, status
+from rest_framework import status, viewsets
 from rest_framework.response import Response
 
-from lotto_app.app.serializers import LottoTicketsSerializer
 from lotto_app.app.models import Game, LottoTickets
-
-from lotto_app.constants import QUANTITY_TICKETS
-
-from lotto_app.app.utils import tickets_from_stoloto, get_tickets
+from lotto_app.app.serializers import LottoTicketsSerializer
+from lotto_app.app.utils import get_tickets, tickets_from_stoloto
 from lotto_app.config import get_from_config, get_section_from_config
+from lotto_app.constants import QUANTITY_TICKETS
 
 
 class LottoTicketsViewSet(viewsets.ModelViewSet):
