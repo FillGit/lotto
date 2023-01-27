@@ -11,3 +11,5 @@ __pycache__/
 file_choice_ten_tickets.json
 
 db.sqlite3
+
+lotto.ini

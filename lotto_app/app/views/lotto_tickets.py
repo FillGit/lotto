@@ -4,14 +4,17 @@ from rest_framework.response import Response
 from lotto_app.app.serializers import LottoTicketsSerializer
 from lotto_app.app.models import Game, LottoTickets
 
-from lotto_app.constants import LOTTO_URL, LOTTO_HEADERS, QUANTITY_TICKETS
+from lotto_app.constants import QUANTITY_TICKETS
 
 from lotto_app.app.utils import tickets_from_stoloto, get_tickets
+from lotto_app.config import get_from_config, get_section_from_config
 
 
 class LottoTicketsViewSet(viewsets.ModelViewSet):
     queryset = LottoTickets.objects.all()
     serializer_class = LottoTicketsSerializer
+    LOTTO_URL = get_from_config('lotto_url', 'url')
+    LOTTO_HEADERS = get_section_from_config('lotto_headers')
 
     def get_object(self):
         return LottoTickets.objects.get(game=self.kwargs['pk'])

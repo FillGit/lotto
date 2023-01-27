@@ -2,9 +2,9 @@ import json
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
-from lotto_app.constants import LOTTO_URL, LOTTO_HEADERS
 from lotto_app.app.views.games import GameViewSet
 from lotto_app.app.models import Game
+from lotto_app.config import get_from_config, get_section_from_config
 
 from lotto_app.app.utils import (
     tickets_from_stoloto,
@@ -139,6 +139,8 @@ class PcChoiceViewSet(ViewSet):
 
     @action(detail=False, url_path='choice_ten_tickets', methods=['get'])
     def choice_ten_tickets(self, request):
+        LOTTO_URL = get_from_config('lotto_url', 'url')
+        LOTTO_HEADERS = get_section_from_config('lotto_headers')
         last_game = int(request.query_params.get('game')) - 1
         data_validate = self._get_data_validate(last_game)
         response_json = data_validate['choice_tickets']
