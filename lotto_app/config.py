@@ -9,6 +9,7 @@ def get_section_from_config(section, default=None):
         raise e.__class__(f"Error while trying to read section: {section} -- {str(e)}")
     return result
 
+
 def get_from_config(section, option, default=None):
     if isinstance(default, dict):
         default = default.get(option)

@@ -8,6 +8,7 @@ from lotto_app.config import get_from_config, get_section_from_config
 LOTTO_URL = get_from_config('lotto_url', 'url')
 LOTTO_HEADERS = get_section_from_config('lotto_headers')
 
+
 class TicketViewSet(ViewSet):
 
     @action(detail=False, url_path='rus_tickets_from_stoloto', methods=['get'])

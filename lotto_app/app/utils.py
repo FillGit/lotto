@@ -102,7 +102,7 @@ def index_bingo(cost_numbers, bingo):
 
 def index_9_parts(cost_numbers, bingo):
     sum_9_parts = {}
-    _9_parts = {n:[v, None] for n, v  in cost_numbers.items()}
+    _9_parts = {n: [v, None] for n, v in cost_numbers.items()}
 
     i = 0
     for num, v in _9_parts.items():
