@@ -28,15 +28,18 @@ class GameViewSet(viewsets.ModelViewSet):
                     get_game_info(Game.objects.get(game=int(game) - 4), 1.0),
                     ]
 
+        ais = []
         for num in range(1, 91):
             snum = str(num)
-            all_cost_numbers[num] = all_info[0]['cost_numbers'][snum] + \
-                                    all_info[1]['cost_numbers'][snum] + \
-                                    all_info[2]['cost_numbers'][snum] + \
-                                    all_info[3]['cost_numbers'][snum] + \
-                                    all_info[4]['cost_numbers'][snum]
+            ais[0] = all_info[0]['cost_numbers'][snum]
+            ais[1] = all_info[1]['cost_numbers'][snum]
+            ais[2] = all_info[2]['cost_numbers'][snum]
+            ais[3] = all_info[3]['cost_numbers'][snum]
+            ais[4] = all_info[4]['cost_numbers'][snum]
+            for ai in ais:
+                all_cost_numbers[num] += ai
 
-        total_cost_numbers = dict((x, y) for x, y in sorted(all_cost_numbers.items(), key= lambda x: x[1]))
+        total_cost_numbers = dict((x, y) for x, y in sorted(all_cost_numbers.items(), key=lambda x: x[1]))
         str_total_cost_numbers = [{k: y} for k, y in total_cost_numbers.items()]
         return {
             'min_cost': str_total_cost_numbers[0],
@@ -82,9 +85,10 @@ class GameViewSet(viewsets.ModelViewSet):
     def index_bingo_30(self, request):
         print('index_bingo_30/')
         game, game_obj = self.game_request(request)
-        last_total_cost_numbers = self.get_five_games_info(int(game)-1)['total_cost_numbers']
+        last_total_cost_numbers = self.get_five_games_info(int(game) - 1)['total_cost_numbers']
         game_info = get_game_info(game_obj)
-        null_numbers = {num: last_total_cost_numbers[int(num)] for num, v in game_info['cost_numbers'].items() if v==0}
+        null_numbers = {num: last_total_cost_numbers[int(num)] for num, v in game_info['cost_numbers'].items() if
+                        v == 0}
         indexes = {
             'index_bingo': index_bingo(last_total_cost_numbers, game_info['bingo_30']),
             'index_9_parts': index_9_parts(last_total_cost_numbers, game_info['bingo_30']),
@@ -92,7 +96,7 @@ class GameViewSet(viewsets.ModelViewSet):
             'bad_numbers': self._get_bad_numbers(int(game)),
             'null_numbers': null_numbers,
         }
-        return Response(indexes,status=200)
+        return Response(indexes, status=200)
 
     def _value_previous_games(self, how_many, previous_games, current_game):
         value_previous_games = {str(i): 0 for i in range(1, 91)}

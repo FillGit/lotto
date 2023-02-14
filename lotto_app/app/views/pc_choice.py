@@ -120,7 +120,7 @@ class PcChoiceViewSet(ViewSet):
             print(f'{num_ticket}: Not validate ticket repeat numbers')
             return False
 
-        print(set(value['numbers']) )
+        print(set(value['numbers']))
 
         if len((set(value['numbers']) & {1, 2})) <= 8:
             print(f'{num_ticket}: Not validate ticket 1 ... 90')

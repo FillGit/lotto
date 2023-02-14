@@ -23,7 +23,8 @@ class LottoTicketsViewSet(viewsets.ModelViewSet):
         tickets_from_remote_server = {}
 
         for i in range(1, QUANTITY_TICKETS):
-            tickets_from_remote_server.update(get_tickets(tickets_from_stoloto(LOTTO_URL, LOTTO_HEADERS)))
+            tickets_from_remote_server.update(
+                get_tickets(tickets_from_stoloto(self.LOTTO_URL, self.LOTTO_HEADERS)))
 
         for ticket, v in tickets_from_remote_server.items():
             lotto_tickets.append(LottoTickets(game_obj=game_obj,
