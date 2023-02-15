@@ -6,7 +6,7 @@ venv/
 
 .idea/
 .vscode/
-.example_codes/
+example_codes/
 __pycache__/
 
 file_choice_ten_tickets.json
