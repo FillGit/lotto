@@ -22,14 +22,19 @@ def get_tickets(response_json):
     return tickets
 
 
-def get_game_numbers(game_obj):
+# Utils
+def record_correction_game_numbers(str_game_numbers: list) -> list:
     game_numbers = []
-    for str_num in [num for num in game_obj.numbers.replace(' ', ',').split(',') if num]:
+    for str_num in [num for num in str_game_numbers.replace(' ', ',').split(',') if num]:
         if str_num[0] == '0':
             game_numbers.append(str_num[1])
         else:
             game_numbers.append(str_num)
     return game_numbers
+
+
+def get_game_numbers(game_obj):
+    return record_correction_game_numbers(game_obj.numbers)
 
 
 def get_cost_numbers(numbers, mult):
