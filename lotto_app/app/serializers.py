@@ -21,19 +21,20 @@ class GroupSerializer(serializers.HyperlinkedModelSerializer):
 class GameSerializer(serializers.ModelSerializer):
     def validate_numbers(self, value):
         list_numbers = record_correction_game_numbers(value)
-        check = [n for n in list_numbers if n.isnumeric() is False]
-        if check:
-            raise serializers.ValidationError(f"You don't have a numerical value {check}")
-        check = [n for n in list_numbers if len(n) > 2]
-        if check:
+        not_numeric = [n for n in list_numbers if n.isnumeric() is False]
+        if not_numeric:
             raise serializers.ValidationError(
-                f"There is a value that has more than 2 characters {check}")
-        if len(list_numbers) > 90:
+                f"You don't have a numerical value - {not_numeric}")
+        many_symbols = [n for n in list_numbers if len(n) > 2]
+        if many_symbols:
             raise serializers.ValidationError(
-                f"You have many more numbers than {MAX_NUMBERS_IN_LOTTO} {list_numbers}")
-        if len(list_numbers) != len(set(check)):
+                f"There is a value that has more than 2 characters - {many_symbols}")
+        if len(list_numbers) > MAX_NUMBERS_IN_LOTTO:
             raise serializers.ValidationError(
-                f"You have same numbers {list_numbers}")
+                f"You have many more numbers than {MAX_NUMBERS_IN_LOTTO} - {len(list_numbers)}")
+        if len(list_numbers) != len(set(list_numbers)):
+            raise serializers.ValidationError(
+                f"You have same numbers - {list_numbers}")
         return " ".join(list_numbers)
 
     class Meta:
