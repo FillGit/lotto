@@ -1,3 +1,4 @@
+from django.core.validators import MinValueValidator
 from django.db import models
 
 # Create your models here.
@@ -6,6 +7,11 @@ from django.db import models
 class Game(models.Model):
     game = models.CharField(max_length=20, blank=False, unique=True)
     numbers = models.CharField(max_length=2000)
+    last_win_number_card = models.PositiveIntegerField(blank=True, null=True,
+                                                       validators=[MinValueValidator(1)])
+    last_win_number_ticket = models.PositiveIntegerField(blank=True, null=True,
+                                                         validators=[MinValueValidator(1)])
+    no_numbers = models.CharField(max_length=20, blank=True, null=True)
 
 
 class PurchasedTickets(models.Model):

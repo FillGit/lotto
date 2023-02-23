@@ -8,7 +8,7 @@ from lotto_app.app.utils import get_game_info, index_9_parts, index_bingo
 
 
 class GameViewSet(viewsets.ModelViewSet):
-    queryset = Game.objects.all()
+    queryset = Game.objects.all().order_by('game')
     serializer_class = GameSerializer
 
     def get_object(self):
@@ -28,18 +28,13 @@ class GameViewSet(viewsets.ModelViewSet):
                     get_game_info(Game.objects.get(game=int(game) - 4), 1.0),
                     ]
 
-        ais = []
         for num in range(1, 91):
             snum = str(num)
-            ais[0] = all_info[0]['cost_numbers'][snum]
-            ais[1] = all_info[1]['cost_numbers'][snum]
-            ais[2] = all_info[2]['cost_numbers'][snum]
-            ais[3] = all_info[3]['cost_numbers'][snum]
-            ais[4] = all_info[4]['cost_numbers'][snum]
-            for ai in ais:
-                all_cost_numbers[num] += ai
+            all_cost_numbers[num] = sum(
+                [all_info[i]['cost_numbers'][snum] for i in range(0, 5)])
 
-        total_cost_numbers = dict((x, y) for x, y in sorted(all_cost_numbers.items(), key=lambda x: x[1]))
+        total_cost_numbers = dict((x, y) for x, y in sorted(all_cost_numbers.items(),
+                                                            key=lambda x: x[1]))
         str_total_cost_numbers = [{k: y} for k, y in total_cost_numbers.items()]
         return {
             'min_cost': str_total_cost_numbers[0],
