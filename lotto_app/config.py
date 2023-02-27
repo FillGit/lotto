@@ -15,3 +15,7 @@ def get_from_config(section, option, default=None):
         default = default.get(option)
     section_opts = get_section_from_config(section)
     return section_opts.get(option, default)
+
+
+def get_factor_games():
+    return [float(get_from_config('factor_games', f'game-{factor}')) for factor in range(1, 6)]

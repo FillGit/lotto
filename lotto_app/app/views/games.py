@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from lotto_app.app.models import Game
 from lotto_app.app.serializers import GameSerializer
 from lotto_app.app.utils import get_game_info, index_9_parts, index_bingo
+from lotto_app.config import get_factor_games
 
 
 class GameViewSet(viewsets.ModelViewSet):
@@ -21,12 +22,10 @@ class GameViewSet(viewsets.ModelViewSet):
     @staticmethod
     def get_five_games_info(game):
         all_cost_numbers = {}
-        all_info = [get_game_info(Game.objects.get(game=game), 1.4),
-                    get_game_info(Game.objects.get(game=int(game) - 1), 1.3),
-                    get_game_info(Game.objects.get(game=int(game) - 2), 1.2),
-                    get_game_info(Game.objects.get(game=int(game) - 3), 1.1),
-                    get_game_info(Game.objects.get(game=int(game) - 4), 1.0),
-                    ]
+        factor_games = get_factor_games()
+        q_games = Game.objects.filter(
+            game__in=[i for i in range(int(game), int(game)-5, -1)]).order_by('-game')
+        all_info = [get_game_info(q_games[i], factor_games[i]) for i in range(0, 5)]
 
         for num in range(1, 91):
             snum = str(num)
