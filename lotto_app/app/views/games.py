@@ -5,10 +5,11 @@ from rest_framework.response import Response
 from lotto_app.app.models import Game
 from lotto_app.app.serializers import GameSerializer
 from lotto_app.app.utils import get_game_info, index_9_parts, index_bingo
+from lotto_app.config import get_factor_games
 
 
 class GameViewSet(viewsets.ModelViewSet):
-    queryset = Game.objects.all()
+    queryset = Game.objects.all().order_by('game')
     serializer_class = GameSerializer
 
     def get_object(self):
@@ -21,25 +22,18 @@ class GameViewSet(viewsets.ModelViewSet):
     @staticmethod
     def get_five_games_info(game):
         all_cost_numbers = {}
-        all_info = [get_game_info(Game.objects.get(game=game), 1.4),
-                    get_game_info(Game.objects.get(game=int(game) - 1), 1.3),
-                    get_game_info(Game.objects.get(game=int(game) - 2), 1.2),
-                    get_game_info(Game.objects.get(game=int(game) - 3), 1.1),
-                    get_game_info(Game.objects.get(game=int(game) - 4), 1.0),
-                    ]
+        factor_games = get_factor_games()
+        q_games = Game.objects.filter(
+            game__in=[i for i in range(int(game), int(game)-5, -1)]).order_by('-game')
+        all_info = [get_game_info(q_games[i], factor_games[i]) for i in range(0, 5)]
 
-        ais = []
         for num in range(1, 91):
             snum = str(num)
-            ais[0] = all_info[0]['cost_numbers'][snum]
-            ais[1] = all_info[1]['cost_numbers'][snum]
-            ais[2] = all_info[2]['cost_numbers'][snum]
-            ais[3] = all_info[3]['cost_numbers'][snum]
-            ais[4] = all_info[4]['cost_numbers'][snum]
-            for ai in ais:
-                all_cost_numbers[num] += ai
+            all_cost_numbers[num] = sum(
+                [all_info[i]['cost_numbers'][snum] for i in range(0, 5)])
 
-        total_cost_numbers = dict((x, y) for x, y in sorted(all_cost_numbers.items(), key=lambda x: x[1]))
+        total_cost_numbers = dict((x, y) for x, y in sorted(all_cost_numbers.items(),
+                                                            key=lambda x: x[1]))
         str_total_cost_numbers = [{k: y} for k, y in total_cost_numbers.items()]
         return {
             'min_cost': str_total_cost_numbers[0],

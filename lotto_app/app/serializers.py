@@ -19,8 +19,23 @@ class GroupSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class GameSerializer(serializers.ModelSerializer):
+    def _validate_win_number_more(self, value, limit, name):
+        if value > limit:
+            raise serializers.ValidationError(
+                f"{name} more number than {limit} - {value}")
+        return value
+
+    def validate_last_win_number_card(self, value):
+        return self._validate_win_number_more(value, MAX_NUMBERS_IN_LOTTO, 'last_win_number_card')
+
+    def validate_last_win_number_ticket(self, value):
+        return self._validate_win_number_more(value, MAX_NUMBERS_IN_LOTTO, 'last_win_number_ticket')
+
     def validate_numbers(self, value):
-        list_numbers = record_correction_game_numbers(value)
+        _val = value.replace(' ', '')
+        list_numbers = record_correction_game_numbers(
+            " ".join([_val[i:i+2] for i in range(0, len(_val), 2)])
+            )
         not_numeric = [n for n in list_numbers if n.isnumeric() is False]
         if not_numeric:
             raise serializers.ValidationError(
@@ -39,6 +54,7 @@ class GameSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Game
+        fields = ['game', 'numbers', 'last_win_number_card', 'last_win_number_ticket', 'no_numbers']
         fields = ['game', 'numbers']
 
 
