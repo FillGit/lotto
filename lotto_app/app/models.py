@@ -13,6 +13,25 @@ class Game(models.Model):
                                                          validators=[MinValueValidator(1)])
     no_numbers = models.CharField(max_length=20, blank=True, null=True)
 
+    def __str__(self):
+        """
+        String for representing the Model object.
+        """
+        return f'id: {self.id}, game: {self.game}'
+
+    def save(self, *args, **kwargs):
+        if not self.no_numbers:
+            self.no_numbers = self.get_no_numbers()
+        super().save(*args, **kwargs)
+
+    def get_no_numbers(self):
+        list_numbers = [int(num) for num in self.numbers.split(' ')]
+        no_numbers = [str(num) for num in
+                      sorted([num for num in range(1, 91) if num not in list_numbers])]
+        if no_numbers:
+            return ' '.join(no_numbers)
+        return None
+
 
 class PurchasedTickets(models.Model):
     game_obj = models.ForeignKey(Game, on_delete=models.CASCADE)

@@ -55,7 +55,6 @@ class GameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Game
         fields = ['game', 'numbers', 'last_win_number_card', 'last_win_number_ticket', 'no_numbers']
-        fields = ['game', 'numbers']
 
 
 class StateNumberSerializer(serializers.ModelSerializer):
