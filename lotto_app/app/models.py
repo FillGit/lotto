@@ -32,6 +32,40 @@ class Game(models.Model):
             return ' '.join(no_numbers)
         return None
 
+    def _get_win(self, str_last_win_number, last_win_number):
+        win_list = []
+        if not last_win_number:
+            return {str_last_win_number: None,
+                    'amount_of_numbers': None
+                    }
+
+        for num in self.get_game_numbers():
+            if int(num) == last_win_number:
+                win_list.append(num)
+                break
+            win_list.append(num)
+        return {'amount_of_numbers': len(win_list),
+                str_last_win_number: last_win_number}
+
+    def get_win_card(self):
+        return self._get_win('last_win_number_card', self.last_win_number_card)
+
+    def get_win_ticket(self):
+        return self._get_win('last_win_number_ticket', self.last_win_number_ticket)
+
+    @staticmethod
+    def record_correction_game_numbers(str_game_numbers: list) -> list:
+        game_numbers = []
+        for str_num in [num for num in str_game_numbers.replace(' ', ',').split(',') if num]:
+            if str_num[0] == '0':
+                game_numbers.append(str_num[1])
+            else:
+                game_numbers.append(str_num)
+        return game_numbers
+
+    def get_game_numbers(self):
+        return self.record_correction_game_numbers(self.numbers)
+
 
 class PurchasedTickets(models.Model):
     game_obj = models.ForeignKey(Game, on_delete=models.CASCADE)
