@@ -2,7 +2,6 @@ from django.contrib.auth.models import Group, User
 from rest_framework import serializers
 
 from lotto_app.app.models import Game, LottoTickets, StateNumbers
-from lotto_app.app.utils import record_correction_game_numbers
 from lotto_app.constants import MAX_NUMBERS_IN_LOTTO
 
 
@@ -33,7 +32,7 @@ class GameSerializer(serializers.ModelSerializer):
 
     def validate_numbers(self, value):
         _val = value.replace(' ', '')
-        list_numbers = record_correction_game_numbers(
+        list_numbers = Game.record_correction_game_numbers(
             " ".join([_val[i:i+2] for i in range(0, len(_val), 2)])
             )
         not_numeric = [n for n in list_numbers if n.isnumeric() is False]
@@ -52,9 +51,15 @@ class GameSerializer(serializers.ModelSerializer):
                 f"You have same numbers - {list_numbers}")
         return " ".join(list_numbers)
 
+    win_card = serializers.DictField(source='get_win_card', read_only=True)
+    win_ticket = serializers.DictField(source='get_win_ticket', read_only=True)
+
     class Meta:
         model = Game
-        fields = ['game', 'numbers', 'last_win_number_card', 'last_win_number_ticket', 'no_numbers']
+        fields = ['game', 'numbers', 'no_numbers', 'win_card', 'win_ticket', 'last_win_number_card',
+                  'last_win_number_ticket']
+        extra_kwargs = {'last_win_number_card': {'write_only': True},
+                        'last_win_number_ticket': {'write_only': True}}
 
 
 class StateNumberSerializer(serializers.ModelSerializer):
