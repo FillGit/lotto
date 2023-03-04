@@ -32,18 +32,24 @@ class Game(models.Model):
             return ' '.join(no_numbers)
         return None
 
-    def _get_win(self, str_last_win_number, last_win_number):
-        win_list = []
+    def get_win_list(self, last_win_number=None):
         if not last_win_number:
-            return {str_last_win_number: None,
-                    'amount_of_numbers': None
-                    }
+            last_win_number = self.last_win_number_ticket
 
+        win_list = []
         for num in self.get_game_numbers():
             if int(num) == last_win_number:
                 win_list.append(num)
                 break
             win_list.append(num)
+        return win_list
+
+    def _get_win(self, str_last_win_number, last_win_number):
+        if not last_win_number:
+            return {str_last_win_number: None,
+                    'amount_of_numbers': None
+                    }
+        win_list = self.get_win_list(last_win_number)
         return {'amount_of_numbers': len(win_list),
                 str_last_win_number: last_win_number}
 
