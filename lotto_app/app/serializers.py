@@ -32,7 +32,7 @@ class GameSerializer(serializers.ModelSerializer):
 
     def validate_numbers(self, value):
         _val = value.replace(' ', '')
-        list_numbers = Game.record_correction_game_numbers(
+        list_numbers = Game.record_correction_numbers(
             " ".join([_val[i:i+2] for i in range(0, len(_val), 2)])
             )
         not_numeric = [n for n in list_numbers if n.isnumeric() is False]
@@ -75,5 +75,5 @@ class LottoTicketsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LottoTickets
-        fields = ['game', 'ticket_number', 'first_seven_numbers',
-                  'ticket_all_numbers', 'taken_ticket']
+        fields = ['game', 'ticket_id', 'first_seven_numbers',
+                  'ticket_numbers', 'taken_ticket']

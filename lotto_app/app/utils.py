@@ -120,3 +120,7 @@ def get_game_info(game_obj, mult=None):
             'cost_numbers': cost_numbers,
             'bingo_30': get_bingo_30(numbers)
             }
+
+
+def get_str_numbers(list_numbers):
+    return ' '.join(map(str, list_numbers))

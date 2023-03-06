@@ -3,7 +3,7 @@ from rest_framework.response import Response
 
 from lotto_app.app.models import Game, LottoTickets
 from lotto_app.app.serializers import LottoTicketsSerializer
-from lotto_app.app.utils import get_tickets, tickets_from_stoloto
+from lotto_app.app.utils import get_str_numbers, get_tickets, tickets_from_stoloto
 from lotto_app.config import get_from_config, get_section_from_config
 from lotto_app.constants import QUANTITY_TICKETS
 
@@ -28,9 +28,9 @@ class LottoTicketsViewSet(viewsets.ModelViewSet):
 
         for ticket, v in tickets_from_remote_server.items():
             lotto_tickets.append(LottoTickets(game_obj=game_obj,
-                                              ticket_number=ticket,
-                                              first_seven_numbers=v['numbers'][0:7],
-                                              ticket_all_numbers=v['numbers']))
+                                              ticket_id=ticket,
+                                              first_seven_numbers=get_str_numbers(v['numbers'][0:7]),
+                                              ticket_numbers=get_str_numbers(v['numbers'])))
         try:
             LottoTickets.objects.bulk_create(lotto_tickets)
         except Exception as err:

@@ -60,7 +60,7 @@ class Game(models.Model):
         return self._get_win('last_win_number_ticket', self.last_win_number_ticket)
 
     @staticmethod
-    def record_correction_game_numbers(str_game_numbers: list) -> list:
+    def record_correction_numbers(str_game_numbers: list) -> list:
         game_numbers = []
         for str_num in [num for num in str_game_numbers.replace(' ', ',').split(',') if num]:
             if str_num[0] == '0':
@@ -70,7 +70,7 @@ class Game(models.Model):
         return game_numbers
 
     def get_game_numbers(self):
-        return self.record_correction_game_numbers(self.numbers)
+        return self.record_correction_numbers(self.numbers)
 
 
 class PurchasedTickets(models.Model):
@@ -93,12 +93,18 @@ class StateNumbers(models.Model):
 
 class LottoTickets(models.Model):
     game_obj = models.ForeignKey(Game, on_delete=models.CASCADE)
-    ticket_number = models.CharField(max_length=20)
+    ticket_id = models.CharField(max_length=20)
     first_seven_numbers = models.CharField(max_length=20)
-    ticket_all_numbers = models.CharField(max_length=500)
+    ticket_numbers = models.CharField(max_length=500)
     taken_ticket = models.BooleanField(default=False)
 
     constraints = [
         models.UniqueConstraint(fields=['game_obj', 'ticket_number'],
                                 name='not unique game and ticket_number')
     ]
+
+    def get_ticket_numbers(self) -> list:
+        return [num for num in self.ticket_numbers.split(' ') if num]
+
+    def get_first_seven_numbers(self) -> list:
+        return [num for num in self.first_seven_numbers.split(' ') if num]
