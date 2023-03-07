@@ -1,11 +1,12 @@
 import json
 
+import requests
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
-from lotto_app.app.models import Game
-from lotto_app.app.utils import get_game_info, get_tickets, index_9_parts, index_bingo, tickets_from_stoloto
+from lotto_app.app.models import Game, LottoTickets
+from lotto_app.app.utils import get_game_info, index_9_parts, index_bingo
 from lotto_app.app.views.games import GameViewSet
 from lotto_app.config import get_from_config, get_section_from_config
 
@@ -132,6 +133,12 @@ class PcChoiceViewSet(ViewSet):
 
         return approved_ticket
 
+    def tickets_from_json(self, url, headers):
+        response = requests.get(url, headers=headers)
+        if response.status_code != 200:
+            raise ValueError(f'{response.status_code} and {response.json()}')
+        return {t['barCode']: {'numbers': t['numbers']} for t in response.json()['tickets']}
+
     @action(detail=False, url_path='choice_ten_tickets', methods=['get'])
     def choice_ten_tickets(self, request):
         LOTTO_URL = get_from_config('lotto_url', 'url')
@@ -141,7 +148,8 @@ class PcChoiceViewSet(ViewSet):
         response_json = data_validate['choice_tickets']
         tickets = {}
         for i in range(0, 1500):
-            tickets.update(get_tickets(tickets_from_stoloto(LOTTO_URL, LOTTO_HEADERS)))
+            tickets.update(
+                LottoTickets.get_tickets_plus((self.tickets_from_stoloto(LOTTO_URL, LOTTO_HEADERS))))
 
         for t, value in tickets.items():
             if self._ticket_validate(t, value, data_validate):
