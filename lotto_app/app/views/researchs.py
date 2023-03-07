@@ -30,12 +30,14 @@ class ResearchViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, url_path='search_win_ticket', methods=['get'])
     def search_win_ticket(self, request, pk=None):
+        last_win_number_ticket = int(request.query_params.get('last_win_number_ticket', None))
         main_game_obj = self.queryset.get(game=pk)
-        main_set_win_numbers = {int(num) for num in main_game_obj.get_win_list()}
+        main_set_win_numbers = {int(num) for num in main_game_obj.get_win_list(last_win_number_ticket)}
 
         ticket_ids = []
         for ticket_obj in LottoTickets.objects.filter(game_obj=self.get_game_obj()):
             ticket_set_numbers = set(ticket_obj.get_ticket_numbers())
-            if (ticket_set_numbers - main_set_win_numbers) == 0:
+            set_n = len(ticket_set_numbers - main_set_win_numbers)
+            if set_n == 0:
                 ticket_ids.append(ticket_obj.ticket_id)
         return Response(ticket_ids, status=200)

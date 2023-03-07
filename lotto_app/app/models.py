@@ -38,10 +38,9 @@ class Game(models.Model):
 
         win_list = []
         for num in self.get_game_numbers():
-            if int(num) == last_win_number:
-                win_list.append(num)
-                break
             win_list.append(num)
+            if last_win_number == num:
+                break
         return win_list
 
     def _get_win(self, str_last_win_number, last_win_number):
@@ -70,7 +69,7 @@ class Game(models.Model):
         return game_numbers
 
     def get_game_numbers(self):
-        return self.record_correction_numbers(self.numbers)
+        return map(int, self.record_correction_numbers(self.numbers))
 
 
 class PurchasedTickets(models.Model):
@@ -104,7 +103,23 @@ class LottoTickets(models.Model):
     ]
 
     def get_ticket_numbers(self) -> list:
-        return [num for num in self.ticket_numbers.split(' ') if num]
+        return [int(num) for num in self.ticket_numbers.split(' ') if num]
 
     def get_first_seven_numbers(self) -> list:
-        return [num for num in self.first_seven_numbers.split(' ') if num]
+        return [int(num) for num in self.first_seven_numbers.split(' ') if num]
+
+    @staticmethod
+    def get_tickets_plus(dict_tickets):
+        dict_tickets_plus = {}
+        for key, value in dict_tickets.items():
+            dict_tickets_plus[key] = {'numbers': value['numbers'],
+                                      'line_1_1': value['numbers'][0:5],
+                                      'line_1_2': value['numbers'][5:10],
+                                      'line_1_3': value['numbers'][10:15],
+                                      'line_2_1': value['numbers'][15:20],
+                                      'line_2_2': value['numbers'][20:25],
+                                      'line_2_3': value['numbers'][25:30],
+                                      'card_1': value['numbers'][0:15],
+                                      'card_2': value['numbers'][15:30]
+                                      }
+        return dict_tickets_plus
