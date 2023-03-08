@@ -59,3 +59,8 @@ class LottoTicketsViewSet(viewsets.ModelViewSet):
     def tickets_from_server(self, request):
         resp = requests.get(self.LOTTO_URL, headers=self.LOTTO_HEADERS)
         return Response(resp.json(), status=200)
+
+    @action(detail=True, url_path='count', methods=['get'])
+    def count(self, request, **kwargs):
+        game = kwargs['pk']
+        return Response(LottoTickets.objects.filter(game_obj__game=game).count(), status=200)
