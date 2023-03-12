@@ -6,8 +6,8 @@ def get_cost_numbers(numbers, mult):
         high_cost = high_cost - 1
 
     for num in range(1, 91):
-        if not str(num) in cost_numbers:
-            cost_numbers[str(num)] = 0
+        if num not in cost_numbers:
+            cost_numbers[num] = 0
     return cost_numbers
 
 

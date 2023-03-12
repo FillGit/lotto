@@ -3,6 +3,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from lotto_app.app.models import Game, LottoTickets
+from lotto_app.app.utils import get_game_info, index_9_parts
+from lotto_app.app.views.games import GameViewSet
 
 
 class ResearchViewSet(viewsets.ModelViewSet):
@@ -41,3 +43,33 @@ class ResearchViewSet(viewsets.ModelViewSet):
             if set_n == 0:
                 ticket_ids.append(ticket_obj.ticket_id)
         return Response(ticket_ids, status=200)
+
+    @action(detail=False, url_path='games_no_numbers', methods=['get'])
+    def games_no_numbers(self, request):
+        print('games_no_numbers/')
+        game_start = int(request.query_params.get('game_start', '1430'))
+        game_end = int(request.query_params.get('game_end', 0))
+        if game_end:
+            game_objs = Game.objects.filter(game__in=[g for g in range(game_start, game_end+1)])
+        else:
+            game_objs = Game.objects.all()[game_start:]
+
+        dict_no_numbers = {}
+        game_index_9_parts = {}
+        for game_obj in game_objs:
+            game = game_obj.game
+            last_total_cost_numbers = GameViewSet.get_five_games_info(int(game) - 1)['total_cost_numbers']
+            game_info = get_game_info(game_obj)
+            dict_no_numbers[game] = GameViewSet.get_five_games_no_numbers(last_total_cost_numbers, game_info)
+            game_index_9_parts[game] = index_9_parts(last_total_cost_numbers,
+                                                     dict_no_numbers[game].keys())
+            dict_no_numbers[game]['_index_9_parts'] = game_index_9_parts[game]
+
+        dict_no_numbers['all_games_index_9_parts'] = {}
+        for _game, _index_9_parts in game_index_9_parts.items():
+            for num, cost in _index_9_parts.items():
+                if num not in dict_no_numbers['all_games_index_9_parts']:
+                    dict_no_numbers['all_games_index_9_parts'][num] = cost
+                else:
+                    dict_no_numbers['all_games_index_9_parts'][num] += cost
+        return Response(dict_no_numbers, status=200)

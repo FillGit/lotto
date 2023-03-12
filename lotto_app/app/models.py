@@ -69,7 +69,7 @@ class Game(models.Model):
         return game_numbers
 
     def get_game_numbers(self):
-        return map(int, self.record_correction_numbers(self.numbers))
+        return list(map(int, self.record_correction_numbers(self.numbers)))
 
 
 class PurchasedTickets(models.Model):
