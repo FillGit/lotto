@@ -25,12 +25,11 @@ class GameViewSet(viewsets.ModelViewSet):
         factor_games = get_factor_games()
         q_games = Game.objects.filter(
             game__in=[i for i in range(int(game), int(game)-5, -1)]).order_by('-game')
-        all_info = [get_game_info(q_games[i], factor_games[i]) for i in range(0, 5)]
+        all_info = [get_game_info(q_games[i], float(factor_games[i])) for i in range(0, 5)]
 
         for num in range(1, 91):
-            snum = str(num)
             all_cost_numbers[num] = sum(
-                [all_info[i]['cost_numbers'][snum] for i in range(0, 5)])
+                [all_info[i]['cost_numbers'][num] for i in range(0, 5)])
 
         total_cost_numbers = dict((x, y) for x, y in sorted(all_cost_numbers.items(),
                                                             key=lambda x: x[1]))
@@ -38,7 +37,6 @@ class GameViewSet(viewsets.ModelViewSet):
         return {
             'min_cost': str_total_cost_numbers[0],
             'max_cost': str_total_cost_numbers[89],
-            'last_8_numbers': [list(num.keys())[0] for num in str_total_cost_numbers[-17:]],
             'total_cost_numbers': total_cost_numbers,
             'total_index_bingo_30': index_bingo(total_cost_numbers,
                                                 [num for num in list(total_cost_numbers.keys())[0:30]])
@@ -75,28 +73,31 @@ class GameViewSet(viewsets.ModelViewSet):
         bad_numbers.update(self._condition_numbers(40, 3, current_game, 3))
         return bad_numbers
 
+    @staticmethod
+    def get_five_games_no_numbers(last_total_cost_numbers, game_info):
+        return {num: last_total_cost_numbers[int(num)] for num, v in game_info['cost_numbers'].items() if
+                v == 0}
+
     @action(detail=False, url_path='index_bingo_30', methods=['get'])
     def index_bingo_30(self, request):
         print('index_bingo_30/')
         game, game_obj = self.game_request(request)
         last_total_cost_numbers = self.get_five_games_info(int(game) - 1)['total_cost_numbers']
         game_info = get_game_info(game_obj)
-        null_numbers = {num: last_total_cost_numbers[int(num)] for num, v in game_info['cost_numbers'].items() if
-                        v == 0}
+
         indexes = {
             'index_bingo': index_bingo(last_total_cost_numbers, game_info['bingo_30']),
             'index_9_parts': index_9_parts(last_total_cost_numbers, game_info['bingo_30']),
             'good_numbers': self._get_good_numbers(int(game)),
             'bad_numbers': self._get_bad_numbers(int(game)),
-            'null_numbers': null_numbers,
+            'no_numbers': self.get_five_games_no_numbers(last_total_cost_numbers, game_info),
         }
         return Response(indexes, status=200)
 
     def _value_previous_games(self, how_many, previous_games, current_game):
-        value_previous_games = {str(i): 0 for i in range(1, 91)}
+        value_previous_games = {i: 0 for i in range(1, 91)}
         number_info = []
         for game in range(current_game - previous_games + 1, current_game + 1):
-            print(game)
             number_info.append(get_game_info(Game.objects.get(game=int(game)))['numbers'][:how_many])
 
         for _info in number_info:
