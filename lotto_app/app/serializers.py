@@ -54,6 +54,14 @@ class GameSerializer(serializers.ModelSerializer):
     win_card = serializers.DictField(source='get_win_card', read_only=True)
     win_ticket = serializers.DictField(source='get_win_ticket', read_only=True)
 
+    def to_internal_value(self, data):
+        if 'auto_win' in data and data['auto_win']:
+            dirty_numbers = [num for num in data['numbers'].replace(' ', ',').split(',') if num]
+            data['last_win_number_card'] = dirty_numbers[1][-2:]
+            data['last_win_number_ticket'] = dirty_numbers[2][-2:]
+            return super().to_internal_value(data)
+        return super().to_internal_value(data)
+
     class Meta:
         model = Game
         fields = ['game', 'numbers', 'no_numbers', 'win_card', 'win_ticket', 'last_win_number_card',
