@@ -1,4 +1,4 @@
-from rest_framework import viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -46,14 +46,17 @@ class ResearchViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, url_path='games_no_numbers', methods=['get'])
     def games_no_numbers(self, request):
-        print('games_no_numbers/')
-        game_start = int(request.query_params.get('game_start', '1430'))
+        game_start = int(request.query_params.get('game_start', 0))
         game_end = int(request.query_params.get('game_end', 0))
-        if game_end:
-            game_objs = Game.objects.filter(game__in=[g for g in range(game_start, game_end+1)])
-        else:
-            game_objs = Game.objects.all()[game_start:]
 
+        if not game_start:
+            return Response({"error": "query_params doesn't game_start"},
+                            status=status.HTTP_400_BAD_REQUEST)
+        if not game_end:
+            return Response({"error": "query_params doesn't game_end"},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        game_objs = Game.objects.filter(game__in=[g for g in range(game_start, game_end+1)])
         dict_no_numbers = {}
         game_index_9_parts = {}
         for game_obj in game_objs:
@@ -67,9 +70,11 @@ class ResearchViewSet(viewsets.ModelViewSet):
 
         dict_no_numbers['all_games_index_9_parts'] = {}
         for _game, _index_9_parts in game_index_9_parts.items():
-            for num, cost in _index_9_parts.items():
-                if num not in dict_no_numbers['all_games_index_9_parts']:
-                    dict_no_numbers['all_games_index_9_parts'][num] = cost
+            for part, cost in _index_9_parts.items():
+                if part not in dict_no_numbers['all_games_index_9_parts']:
+                    dict_no_numbers['all_games_index_9_parts'][part] = cost
                 else:
-                    dict_no_numbers['all_games_index_9_parts'][num] += cost
+                    dict_no_numbers['all_games_index_9_parts'][part] += cost
+            dict_no_numbers['all_games_index_9_parts'] = dict(
+                sorted(dict_no_numbers['all_games_index_9_parts'].items(), key=lambda item: item[1]))
         return Response(dict_no_numbers, status=200)
