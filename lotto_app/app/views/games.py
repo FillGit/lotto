@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from lotto_app.app.models import Game
 from lotto_app.app.serializers import GameSerializer
 from lotto_app.app.utils import get_game_info, index_9_parts, index_bingo
-from lotto_app.config import get_factor_games
+from lotto_app.config import get_amount_games, get_factor_games
 
 
 class GameViewSet(viewsets.ModelViewSet):
@@ -20,16 +20,17 @@ class GameViewSet(viewsets.ModelViewSet):
         return game, Game.objects.get(game=game)
 
     @staticmethod
-    def get_five_games_info(game):
+    def get_last_games_info(game):
         all_cost_numbers = {}
-        factor_games = get_factor_games()
+        amount_games = get_amount_games()
+        factor_games = get_factor_games(amount_games)
         q_games = Game.objects.filter(
-            game__in=[i for i in range(int(game), int(game)-5, -1)]).order_by('-game')
-        all_info = [get_game_info(q_games[i], float(factor_games[i])) for i in range(0, 5)]
+            game__in=[i for i in range(int(game), int(game)-amount_games, -1)]).order_by('-game')
+        all_info = [get_game_info(q_games[i], float(factor_games[i])) for i in range(0, amount_games)]
 
         for num in range(1, 91):
             all_cost_numbers[num] = sum(
-                [all_info[i]['cost_numbers'][num] for i in range(0, 5)])
+                [all_info[i]['cost_numbers'][num] for i in range(0, amount_games)])
 
         total_cost_numbers = dict((x, y) for x, y in sorted(all_cost_numbers.items(),
                                                             key=lambda x: x[1]))
@@ -48,11 +49,11 @@ class GameViewSet(viewsets.ModelViewSet):
         game, game_obj = self.game_request(request)
         return Response(get_game_info(game_obj), status=200)
 
-    @action(detail=False, url_path='five_games_info', methods=['get'])
-    def five_games_info(self, request):
-        print('five_games_info/')
+    @action(detail=False, url_path='last_games_info', methods=['get'])
+    def last_games_info(self, request):
+        print('last_games_info/')
         game = request.query_params.get('game')
-        return Response(self.get_five_games_info(game), status=200)
+        return Response(self.get_last_games_info(game), status=200)
 
     def _condition_numbers(self, how_many, previous_games, current_game, condition):
         return {int(num) for num, value in self._value_previous_games(how_many, previous_games, current_game).items()
@@ -82,7 +83,7 @@ class GameViewSet(viewsets.ModelViewSet):
     def index_bingo_30(self, request):
         print('index_bingo_30/')
         game, game_obj = self.game_request(request)
-        last_total_cost_numbers = self.get_five_games_info(int(game) - 1)['total_cost_numbers']
+        last_total_cost_numbers = self.get_last_games_info(int(game) - 1)['total_cost_numbers']
         game_info = get_game_info(game_obj)
 
         indexes = {

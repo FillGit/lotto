@@ -28,7 +28,7 @@ class PcChoiceViewSet(ViewSet):
 
     def _get_data_validate(self, last_game):
         last_game_obj = Game.objects.get(game=last_game)
-        five_games_info = GameViewSet.get_five_games_info(last_game)
+        five_games_info = GameViewSet.get_last_games_info(last_game)
         last_game_info = get_game_info(last_game_obj)
         choice_tickets = self._read_file_json()
 
