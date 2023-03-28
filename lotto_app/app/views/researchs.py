@@ -61,7 +61,7 @@ class ResearchViewSet(viewsets.ModelViewSet):
         game_index_9_parts = {}
         for game_obj in game_objs:
             game = game_obj.game
-            last_total_cost_numbers = GameViewSet.get_five_games_info(int(game) - 1)['total_cost_numbers']
+            last_total_cost_numbers = GameViewSet.get_last_games_info(int(game) - 1)['total_cost_numbers']
             game_info = get_game_info(game_obj)
             dict_no_numbers[game] = GameViewSet.get_five_games_no_numbers(last_total_cost_numbers, game_info)
             game_index_9_parts[game] = index_9_parts(last_total_cost_numbers,
