@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from lotto_app.app.models import Game
+from lotto_app.app.parsers.choise_parsers import ChoiseParsers
 from lotto_app.app.serializers import GameSerializer
 from lotto_app.app.utils import get_game_info, index_9_parts, index_bingo
 from lotto_app.config import get_amount_games, get_factor_games
@@ -114,3 +115,15 @@ class GameViewSet(viewsets.ModelViewSet):
         current_game = int(request.query_params.get('current_game'))
         return Response(self._value_previous_games(how_many, previous_games, current_game),
                         status=200)
+
+    @action(detail=False, url_path='parsers', methods=['post'])
+    def parsers(self, request):
+        print('parsers/')
+        name_game = request.data['name_game']
+        page = request.data['page']
+        class_parser = ChoiseParsers(name_game, page).get_class_parser()
+        serializer = self.get_serializer(data=class_parser.parser_response_for_view())
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=201, headers=headers)

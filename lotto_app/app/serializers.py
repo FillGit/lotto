@@ -18,6 +18,7 @@ class GroupSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class GameSerializer(serializers.ModelSerializer):
+
     def _validate_win_number_more(self, value, limit, name):
         if value > limit:
             raise serializers.ValidationError(
@@ -31,25 +32,22 @@ class GameSerializer(serializers.ModelSerializer):
         return self._validate_win_number_more(value, MAX_NUMBERS_IN_LOTTO, 'last_win_number_ticket')
 
     def validate_numbers(self, value):
-        _val = value.replace(' ', '')
-        list_numbers = Game.record_correction_numbers(
-            " ".join([_val[i:i+2] for i in range(0, len(_val), 2)])
-            )
-        not_numeric = [n for n in list_numbers if n.isnumeric() is False]
+        list_str_numbers = Game.get_list_str_numbers(value, True)
+        not_numeric = [n for n in list_str_numbers if n.isnumeric() is False]
         if not_numeric:
             raise serializers.ValidationError(
                 f"You don't have a numerical value - {not_numeric}")
-        many_symbols = [n for n in list_numbers if len(n) > 2]
+        many_symbols = [n for n in list_str_numbers if len(n) > 2]
         if many_symbols:
             raise serializers.ValidationError(
                 f"There is a value that has more than 2 characters - {many_symbols}")
-        if len(list_numbers) > MAX_NUMBERS_IN_LOTTO:
+        if len(list_str_numbers) > MAX_NUMBERS_IN_LOTTO:
             raise serializers.ValidationError(
-                f"You have many more numbers than {MAX_NUMBERS_IN_LOTTO} - {len(list_numbers)}")
-        if len(list_numbers) != len(set(list_numbers)):
+                f"You have many more numbers than {MAX_NUMBERS_IN_LOTTO} - {len(list_str_numbers)}")
+        if len(list_str_numbers) != len(set(list_str_numbers)):
             raise serializers.ValidationError(
-                f"You have same numbers - {list_numbers}")
-        return " ".join(list_numbers)
+                f"You have same numbers - {list_str_numbers}")
+        return " ".join(list_str_numbers)
 
     win_card = serializers.DictField(source='get_win_card', read_only=True)
     win_ticket = serializers.DictField(source='get_win_ticket', read_only=True)

@@ -43,14 +43,14 @@ class Game(models.Model):
                 break
         return win_list
 
-    def _get_win(self, str_last_win_number, last_win_number):
+    def _get_win(self, name_last_win_number, last_win_number):
         if not last_win_number:
-            return {str_last_win_number: None,
+            return {name_last_win_number: None,
                     'amount_of_numbers': None
                     }
         win_list = self.get_win_list(last_win_number)
         return {'amount_of_numbers': len(win_list),
-                str_last_win_number: last_win_number}
+                name_last_win_number: last_win_number}
 
     def get_win_card(self):
         return self._get_win('last_win_number_card', self.last_win_number_card)
@@ -59,14 +59,21 @@ class Game(models.Model):
         return self._get_win('last_win_number_ticket', self.last_win_number_ticket)
 
     @staticmethod
-    def record_correction_numbers(str_game_numbers: list) -> list:
+    def record_correction_numbers(str_numbers: str, cut_first_zero=False) -> list[str]:
         game_numbers = []
-        for str_num in [num for num in str_game_numbers.replace(' ', ',').split(',') if num]:
-            if str_num[0] == '0':
+        for str_num in [num for num in str_numbers.replace(' ', ',').split(',') if num]:
+            if str_num[0] == '0' and cut_first_zero:
                 game_numbers.append(str_num[1])
             else:
                 game_numbers.append(str_num)
         return game_numbers
+
+    @staticmethod
+    def get_list_str_numbers(str_numbers, cut_first_zero=False):
+        _val = str_numbers.replace(' ', '')
+        return Game.record_correction_numbers(
+            " ".join([_val[i:i+2] for i in range(0, len(_val), 2)]), cut_first_zero
+        )
 
     def get_game_numbers(self):
         return list(map(int, self.record_correction_numbers(self.numbers)))

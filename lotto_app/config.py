@@ -1,5 +1,7 @@
 from django.conf import settings
 
+from lotto_app.constants import LOTTO_PARSER
+
 
 def get_section_from_config(section, default=None):
     default = default or {}
@@ -23,3 +25,7 @@ def get_amount_games():
 
 def get_factor_games(amount_games=5):
     return [float(get_from_config('factor_games', f'game-{factor}')) for factor in range(1, amount_games+1)]
+
+
+def get_class_parser(name_game):
+    return LOTTO_PARSER[get_from_config('lotto_parsers', f'parser_{name_game}')]
