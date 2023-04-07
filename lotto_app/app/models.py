@@ -68,6 +68,13 @@ class Game(models.Model):
                 game_numbers.append(str_num)
         return game_numbers
 
+    @staticmethod
+    def get_list_str_numbers(str_numbers, cut_first_zero=False):
+        _val = str_numbers.replace(' ', '')
+        return Game.record_correction_numbers(
+            " ".join([_val[i:i+2] for i in range(0, len(_val), 2)]), cut_first_zero
+        )
+
     def get_game_numbers(self):
         return list(map(int, self.record_correction_numbers(self.numbers)))
 

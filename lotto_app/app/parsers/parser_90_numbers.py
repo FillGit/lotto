@@ -1,5 +1,6 @@
 import re
 
+from lotto_app.app.models import Game
 from lotto_app.app.parsers.lotto_parser import LottoParser
 
 
@@ -8,7 +9,7 @@ class Parser90Numbers(LottoParser):
     def _get_calc_no_numbers(self, str_numbers):
         _str_all_numbers = sorted([self.plus_zero(num) for num in range(1, 91)])
         list_str_no_numbers = [num for num in _str_all_numbers
-                               if num not in self.get_list_str_numbers(str_numbers)]
+                               if num not in Game.get_list_str_numbers(str_numbers)]
         if list_str_no_numbers:
             return ''.join(list_str_no_numbers)
         return None
@@ -20,7 +21,7 @@ class Parser90Numbers(LottoParser):
                 f'_validate_no_number: no_numbers={str_no_numbers}, calculated_no_numbers={calc_str_no_numbers}')
 
     def _validate_numbers(self, value):
-        list_str_numbers = LottoParser.get_list_str_numbers(value, True)
+        list_str_numbers = Game.get_list_str_numbers(value, True)
         not_numeric = [n for n in list_str_numbers if n.isnumeric() is False]
         if not_numeric:
             raise ValueError(

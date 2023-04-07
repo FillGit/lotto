@@ -4,8 +4,6 @@ from rest_framework import serializers
 from lotto_app.app.models import Game, LottoTickets, StateNumbers
 from lotto_app.constants import MAX_NUMBERS_IN_LOTTO
 
-from lotto_app.app.parsers.lotto_parser import LottoParser
-
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
@@ -34,7 +32,7 @@ class GameSerializer(serializers.ModelSerializer):
         return self._validate_win_number_more(value, MAX_NUMBERS_IN_LOTTO, 'last_win_number_ticket')
 
     def validate_numbers(self, value):
-        list_str_numbers = LottoParser.get_list_str_numbers(value, True)
+        list_str_numbers = Game.get_list_str_numbers(value, True)
         not_numeric = [n for n in list_str_numbers if n.isnumeric() is False]
         if not_numeric:
             raise serializers.ValidationError(

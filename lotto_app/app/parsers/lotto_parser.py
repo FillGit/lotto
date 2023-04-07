@@ -1,7 +1,5 @@
 from bs4 import BeautifulSoup
 
-from lotto_app.app.models import Game
-
 
 class LottoParser():
 
@@ -14,13 +12,6 @@ class LottoParser():
         if len(str(number)) == 1:
             return f'0{number}'
         return str(number)
-
-    @staticmethod
-    def get_list_str_numbers(str_numbers, cut_first_zero=False):
-        _val = str_numbers.replace(' ', '')
-        return Game.record_correction_numbers(
-            " ".join([_val[i:i+2] for i in range(0, len(_val), 2)]), cut_first_zero
-        )
 
     def _get_soup(self):
         return BeautifulSoup(self.response.text, 'lxml')
