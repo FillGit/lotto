@@ -122,4 +122,8 @@ class GameViewSet(viewsets.ModelViewSet):
         name_game = request.data['name_game']
         page = request.data['page']
         class_parser = ChoiseParsers(name_game, page).get_class_parser()
-        return Response(class_parser.parser_response_for_view(), status=201)
+        serializer = self.get_serializer(data=class_parser.parser_response_for_view())
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=201, headers=headers)
