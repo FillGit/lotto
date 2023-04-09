@@ -127,3 +127,23 @@ class GameViewSet(viewsets.ModelViewSet):
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=201, headers=headers)
+
+    @action(detail=False, url_path='parsers_mult_pages', methods=['post'])
+    def parsers_mult_pages(self, request):
+        print('parsers_mult_pages/')
+        name_game = request.data['name_game']
+        page_start = request.data['page_start']
+        page_end = request.data['page_end']
+        list_serializers = []
+        for page in range(page_start, page_end+1):
+            class_parser = ChoiseParsers(name_game, page).get_class_parser()
+            serializer = self.get_serializer(data=class_parser.parser_response_for_view())
+            serializer.is_valid(raise_exception=True)
+            list_serializers.append(serializer)
+
+        serializer_dataset = []
+        for serializer in list_serializers:
+            self.perform_create(serializer)
+            serializer_dataset.append(serializer.data)
+
+        return Response(serializer_dataset, status=201)

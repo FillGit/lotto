@@ -36,7 +36,7 @@ class Parser90Numbers(LottoParser):
 
         number_tags = self.soup.find_all('td', {'class': 'word-wrap'})
         dirty_numbers = [tag.text.replace('\n', '') for tag in number_tags][0::2]
-        str_numbers = ''.join(dirty_numbers)
+        str_numbers = ''.join([_num for _num in dirty_numbers if _num.isnumeric()])
         self._validate_numbers(str_numbers)
 
         game_tags = self.soup.find('div', id='content').find('h1')
