@@ -46,10 +46,10 @@ class Game(models.Model):
     def _get_win(self, name_last_win_number, last_win_number):
         if not last_win_number:
             return {name_last_win_number: None,
-                    'amount_of_numbers': None
+                    'by_account': None
                     }
         win_list = self.get_win_list(last_win_number)
-        return {'amount_of_numbers': len(win_list),
+        return {'by_account': len(win_list),
                 name_last_win_number: last_win_number}
 
     def get_win_card(self):

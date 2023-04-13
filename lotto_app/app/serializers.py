@@ -45,8 +45,9 @@ class GameSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 f"You have many more numbers than {MAX_NUMBERS_IN_LOTTO} - {len(list_str_numbers)}")
         if len(list_str_numbers) != len(set(list_str_numbers)):
+            dup = {x for x in list_str_numbers if list_str_numbers.count(x) > 1}
             raise serializers.ValidationError(
-                f"You have same numbers - {list_str_numbers}")
+                f"You have same numbers - {dup}")
         return " ".join(list_str_numbers)
 
     win_card = serializers.DictField(source='get_win_card', read_only=True)
