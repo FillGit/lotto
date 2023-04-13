@@ -120,3 +120,14 @@ class GameTestApiCase(WebTest):
 
         assert_that(resp.json['win_card']['last_win_number_card'], is_(list_int_numbers[5]))
         assert_that(resp.json['win_ticket']['last_win_number_ticket'], is_(list_int_numbers[10]))
+
+    def test_happy_path_delete(self):
+        resp = self.app.get(self.endpoint)
+        assert_that(resp.json, has_length(3))
+
+        resp = self.app.delete(f'{self.endpoint}2/')
+        assert_that(resp.status, is_('204 No Content'))
+
+        resp = self.app.get(self.endpoint)
+        assert_that(resp.json, has_length(2))
+        assert_that([resp.json[0]['game'], resp.json[1]['game']], is_(['1', '3']))
