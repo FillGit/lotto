@@ -1,5 +1,6 @@
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
+from django.contrib.postgres.fields import ArrayField
 
 # Create your models here.
 
@@ -7,13 +8,22 @@ from django.db import models
 class Game(models.Model):
     name_game = models.CharField(max_length=25, blank=False)
     game_id = models.CharField(max_length=20, blank=False, unique=True)
-    numbers = models.CharField(max_length=2000)
+    numbers = ArrayField(
+        models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(90)]),
+        size=90)
+
     last_win_number_card = models.PositiveIntegerField(blank=True, null=True,
                                                        validators=[MinValueValidator(1)])
     last_win_number_ticket = models.PositiveIntegerField(blank=True, null=True,
                                                          validators=[MinValueValidator(1)])
-    no_numbers = models.CharField(max_length=2000, blank=True, null=True)
-    add_numbers = models.CharField(max_length=20, blank=True, null=True)
+
+    no_numbers = ArrayField(
+        models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(89)]),
+        size=89, blank=True, null=True)
+
+    add_numbers = ArrayField(
+        models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(89)]),
+        size=89, blank=True, null=True)
 
     def __str__(self):
         """
