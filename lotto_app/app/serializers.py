@@ -63,8 +63,8 @@ class GameSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Game
-        fields = ['game', 'numbers', 'no_numbers', 'win_card', 'win_ticket', 'last_win_number_card',
-                  'last_win_number_ticket']
+        fields = ['name_game', 'game_id', 'numbers', 'no_numbers', 'win_card', 'win_ticket',
+                  'last_win_number_card', 'last_win_number_ticket', 'add_numbers']
         extra_kwargs = {'last_win_number_card': {'write_only': True},
                         'last_win_number_ticket': {'write_only': True}}
 

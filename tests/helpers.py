@@ -6,9 +6,10 @@ from lotto_app.app.models import Game
 
 class GameFactory():
 
-    def __init__(self, amount_games=3, game_ids=[], numbers_in_lotto=90, no_numbers_in_lotto=3,
-                 fields_games=None, only_games_json=False):
+    def __init__(self, name_game='test_lotto1', amount_games=3, game_ids=[], numbers_in_lotto=90,
+                 no_numbers_in_lotto=3, fields_games=None, only_games_json=False):
 
+        self.name_game = name_game
         self.amount_games = amount_games
         self.game_ids = game_ids
         self.numbers_in_lotto = numbers_in_lotto
@@ -32,12 +33,13 @@ class GameFactory():
             return ' '.join(no_numbers)
         return None
 
-    def get_fields(self, game_id, numbers_in_lotto, no_numbers_in_lotto):
+    def get_fields(self, game_id, name_game, numbers_in_lotto, no_numbers_in_lotto):
         list_numbers = list(range(1, numbers_in_lotto+1))
         shuffle(list_numbers)
         numbers = ' '.join([str(n) for n in list_numbers[0:numbers_in_lotto-no_numbers_in_lotto]])
         return {
-            'game': game_id,
+            'name_game': name_game,
+            'game_id': game_id,
             'numbers': numbers,
             'last_win_number_card': list_numbers[35],
             'last_win_number_ticket': list_numbers[60],
@@ -46,11 +48,12 @@ class GameFactory():
 
     def get_fields_games(self):
         if not self.game_ids:
-            game_objs = Game.objects.all()
-            start = 1 if not game_objs else int(game_objs.last().game)+1
+            game_objs = Game.objects.filter(name_game=self.name_game).all()
+            start = 1 if not game_objs else int(game_objs.last().game_id)+1
             game_ids = [_id for _id in range(start, start+self.amount_games)]
 
-        return [self.get_fields(_id, self.numbers_in_lotto, self.no_numbers_in_lotto) for _id in game_ids]
+        return [self.get_fields(_id, self.name_game, self.numbers_in_lotto, self.no_numbers_in_lotto)
+                for _id in game_ids]
 
     def set_games_db(self):
         return Game.objects.bulk_create([Game(**fields) for fields in self.fields_games])
@@ -63,7 +66,8 @@ class GameFactory():
     def get_game_json(self, index=0):
         _fields_game = deepcopy(self.fields_games[index])
         return {
-            'game': _fields_game['game'],
+            'name_game': _fields_game['name_game'],
+            'game_id': _fields_game['game_id'],
             'numbers': ' '.join([self._add_zero(num) for num in _fields_game['numbers'].split(' ')]),
             'last_win_number_card': _fields_game['last_win_number_card'],
             'last_win_number_ticket': _fields_game['last_win_number_ticket'],
@@ -84,7 +88,8 @@ class GameFactory():
         auto_win_numbers = self._get_auto_win_numbers(_fields_game['numbers'],
                                                       line, win_card_by_account, win_ticket_by_account)
         return {
-            'game': _fields_game['game'],
+            'name_game': _fields_game['name_game'],
+            'game_id': _fields_game['game_id'],
             'numbers': auto_win_numbers,
             'auto_win': True,
         }

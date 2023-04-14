@@ -5,13 +5,15 @@ from django.db import models
 
 
 class Game(models.Model):
-    game = models.CharField(max_length=20, blank=False, unique=True)
+    name_game = models.CharField(max_length=25, blank=False)
+    game_id = models.CharField(max_length=20, blank=False, unique=True)
     numbers = models.CharField(max_length=2000)
     last_win_number_card = models.PositiveIntegerField(blank=True, null=True,
                                                        validators=[MinValueValidator(1)])
     last_win_number_ticket = models.PositiveIntegerField(blank=True, null=True,
                                                          validators=[MinValueValidator(1)])
     no_numbers = models.CharField(max_length=20, blank=True, null=True)
+    add_numbers = models.CharField(max_length=20, blank=True, null=True)
 
     def __str__(self):
         """

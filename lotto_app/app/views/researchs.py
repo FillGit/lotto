@@ -8,7 +8,7 @@ from lotto_app.app.views.games import GameViewSet
 
 
 class ResearchViewSet(viewsets.ModelViewSet):
-    queryset = Game.objects.all().order_by('game')
+    queryset = Game.objects.all().order_by('game_id')
 
     def get_game_obj(self):
         return Game.objects.get(game=self.kwargs['pk'])
