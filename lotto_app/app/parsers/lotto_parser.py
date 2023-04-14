@@ -3,8 +3,9 @@ from bs4 import BeautifulSoup
 
 class LottoParser():
 
-    def __init__(self, response, page, *args, **kwargs):
+    def __init__(self, response, name_game, page, *args, **kwargs):
         self.response = response
+        self.name_game = name_game
         self.page = str(page)
         self.soup = self._get_soup()
 
@@ -20,9 +21,9 @@ class LottoParser():
         if self.response.status_code != 200:
             raise ValueError(f'validate_status_code: {self.response.status_code}')
 
-    def validate_game(self, game):
-        if self.page != game:
-            raise ValueError(f'validate_game: page={self.page}, game={game}')
+    def validate_game(self, game_id):
+        if self.page != game_id:
+            raise ValueError(f'validate_game: page={self.page}, game={game_id}')
 
     def parser_response_for_view(self):
         pass

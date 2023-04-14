@@ -15,13 +15,13 @@ class GameTestApiCase(WebTest):
     def test_happy_path_get_list(self):
         resp = self.app.get(self.endpoint)
         assert_that(resp.json, has_length(3))
-        assert_that(resp.json[1]['game'], is_('2'))
+        assert_that(resp.json[1]['game_id'], is_('2'))
         assert_that(Game.record_correction_numbers(resp.json[0]['numbers']), has_length(87))
         assert_that(Game.record_correction_numbers(resp.json[2]['no_numbers']), has_length(3))
 
     def test_happy_path_get(self):
         resp = self.app.get(f'{self.endpoint}2/')
-        assert_that(resp.json['game'], is_('2'))
+        assert_that(resp.json['game_id'], is_('2'))
         assert_that(Game.record_correction_numbers(resp.json['numbers']), has_length(87))
         assert_that(Game.record_correction_numbers(resp.json['no_numbers']), has_length(3))
 
@@ -30,7 +30,7 @@ class GameTestApiCase(WebTest):
                                no_numbers_in_lotto=4, only_games_json=True)
         params = _factory.get_game_json()
         resp = self.app.post_json(self.endpoint, params=params)
-        assert_that(resp.json['game'], is_('4'))
+        assert_that(resp.json['game_id'], is_('4'))
         assert_that(Game.record_correction_numbers(resp.json['numbers']), has_length(86))
         assert_that(Game.record_correction_numbers(resp.json['no_numbers']), has_length(4))
         assert_that(resp.json['win_card']['by_account'], is_(36))
@@ -45,9 +45,10 @@ class GameTestApiCase(WebTest):
                                no_numbers_in_lotto=4, only_games_json=True)
         _params = _factory.get_game_json()
         resp = self.app.post_json(self.endpoint,
-                                  params={'game': _params['game'],
+                                  params={'name_game': 'test_lotto1',
+                                          'game_id': _params['game_id'],
                                           'numbers': _params['numbers']})
-        assert_that(resp.json['game'], is_('4'))
+        assert_that(resp.json['game_id'], is_('4'))
         assert_that(Game.record_correction_numbers(resp.json['numbers']), has_length(86))
         assert_that(Game.record_correction_numbers(resp.json['no_numbers']), has_length(4))
         assert_that(resp.json['win_card']['by_account'], is_(None))
@@ -63,7 +64,7 @@ class GameTestApiCase(WebTest):
         last_win_number_card = int(dirty_numbers[1][-2:])
         last_win_number_ticket = int(dirty_numbers[2][-2:])
         resp = self.app.post_json(self.endpoint, params=params)
-        assert_that(resp.json['game'], is_('4'))
+        assert_that(resp.json['game_id'], is_('4'))
         assert_that(Game.record_correction_numbers(resp.json['numbers']), has_length(88))
         assert_that(Game.record_correction_numbers(resp.json['no_numbers']), has_length(2))
         assert_that(resp.json['win_card']['by_account'], is_(37))
@@ -76,9 +77,10 @@ class GameTestApiCase(WebTest):
                                no_numbers_in_lotto=60, only_games_json=True)
         params = _factory.get_game_auto_win_json()
         resp_get = self.app.get(f'{self.endpoint}1/')
-        resp = self.app.put_json(f'{self.endpoint}1/', params={'game': '1',
+        resp = self.app.put_json(f'{self.endpoint}1/', params={'name_game': 'test_lotto1',
+                                                               'game_id': '1',
                                                                'numbers': params['numbers']})
-        assert_that(resp.json['game'], is_('1'))
+        assert_that(resp.json['game_id'], is_('1'))
         assert_that(Game.record_correction_numbers(resp.json['numbers']), has_length(30))
         assert_that(Game.record_correction_numbers(resp.json['no_numbers']), has_length(3))
 
@@ -111,7 +113,7 @@ class GameTestApiCase(WebTest):
         resp = self.app.patch_json(f'{self.endpoint}3/',
                                    params={'last_win_number_card': list_int_numbers[5],
                                            'last_win_number_ticket': list_int_numbers[10]})
-        assert_that(resp.json['game'], is_('3'))
+        assert_that(resp.json['game_id'], is_('3'))
         assert_that(resp.json['numbers'], is_(numbers))
         assert_that(resp.json['no_numbers'], is_(no_numbers))
 
@@ -130,4 +132,4 @@ class GameTestApiCase(WebTest):
 
         resp = self.app.get(self.endpoint)
         assert_that(resp.json, has_length(2))
-        assert_that([resp.json[0]['game'], resp.json[1]['game']], is_(['1', '3']))
+        assert_that([resp.json[0]['game_id'], resp.json[1]['game_id']], is_(['1', '3']))

@@ -10,23 +10,23 @@ from lotto_app.config import get_amount_games, get_factor_games
 
 
 class GameViewSet(viewsets.ModelViewSet):
-    queryset = Game.objects.all().order_by('game')
+    queryset = Game.objects.all().order_by('game_id')
     serializer_class = GameSerializer
 
     def get_object(self):
-        return Game.objects.get(game=self.kwargs['pk'])
+        return Game.objects.get(game_id=self.kwargs['pk'])
 
     def game_request(self, request):
-        game = request.query_params.get('game')
-        return game, Game.objects.get(game=game)
+        game_id = request.query_params.get('game_id')
+        return game_id, Game.objects.get(game_id=game_id)
 
     @staticmethod
-    def get_last_games_info(game):
+    def get_last_games_info(game_id):
         all_cost_numbers = {}
         amount_games = get_amount_games()
         factor_games = get_factor_games(amount_games)
         q_games = Game.objects.filter(
-            game__in=[i for i in range(int(game), int(game)-amount_games, -1)]).order_by('-game')
+            game_id__in=[i for i in range(int(game_id), int(game_id)-amount_games, -1)]).order_by('-game_id')
         all_info = [get_game_info(q_games[i], float(factor_games[i])) for i in range(0, amount_games)]
 
         for num in range(1, 91):
@@ -47,14 +47,14 @@ class GameViewSet(viewsets.ModelViewSet):
     @action(detail=False, url_path='info', methods=['get'])
     def info(self, request):
         print('info/')
-        game, game_obj = self.game_request(request)
+        game_id, game_obj = self.game_request(request)
         return Response(get_game_info(game_obj), status=200)
 
     @action(detail=False, url_path='last_games_info', methods=['get'])
     def last_games_info(self, request):
         print('last_games_info/')
-        game = request.query_params.get('game')
-        return Response(self.get_last_games_info(game), status=200)
+        game_id = request.query_params.get('game_id')
+        return Response(self.get_last_games_info(game_id), status=200)
 
     def _condition_numbers(self, how_many, previous_games, current_game, condition):
         return {int(num) for num, value in self._value_previous_games(how_many, previous_games, current_game).items()
@@ -83,15 +83,15 @@ class GameViewSet(viewsets.ModelViewSet):
     @action(detail=False, url_path='index_bingo_30', methods=['get'])
     def index_bingo_30(self, request):
         print('index_bingo_30/')
-        game, game_obj = self.game_request(request)
-        last_total_cost_numbers = self.get_last_games_info(int(game) - 1)['total_cost_numbers']
+        game_id, game_obj = self.game_request(request)
+        last_total_cost_numbers = self.get_last_games_info(int(game_id) - 1)['total_cost_numbers']
         game_info = get_game_info(game_obj)
 
         indexes = {
             'index_bingo': index_bingo(last_total_cost_numbers, game_info['bingo_30']),
             'index_9_parts': index_9_parts(last_total_cost_numbers, game_info['bingo_30']),
-            'good_numbers': self._get_good_numbers(int(game)),
-            'bad_numbers': self._get_bad_numbers(int(game)),
+            'good_numbers': self._get_good_numbers(int(game_id)),
+            'bad_numbers': self._get_bad_numbers(int(game_id)),
             'no_numbers': self.get_five_games_no_numbers(last_total_cost_numbers, game_info),
         }
         return Response(indexes, status=200)
@@ -99,8 +99,9 @@ class GameViewSet(viewsets.ModelViewSet):
     def _value_previous_games(self, how_many, previous_games, current_game):
         value_previous_games = {i: 0 for i in range(1, 91)}
         number_info = []
-        for game in range(current_game - previous_games + 1, current_game + 1):
-            number_info.append(get_game_info(Game.objects.get(game=int(game)))['numbers'][:how_many])
+        for game_id in range(current_game - previous_games + 1, current_game + 1):
+            number_info.append(get_game_info(
+                Game.objects.get(game_id=int(game_id)))['numbers'][:how_many])
 
         for _info in number_info:
             for num in _info:
