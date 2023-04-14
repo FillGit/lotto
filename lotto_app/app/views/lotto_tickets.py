@@ -23,13 +23,13 @@ class LottoTicketsViewSet(viewsets.ModelViewSet):
         return {t['barCode']: {'numbers': t['numbers']} for t in response.json()['tickets']}
 
     def get_object(self):
-        return LottoTickets.objects.get(game=self.kwargs['pk'])
+        return LottoTickets.objects.get(game_id=self.kwargs['pk'])
 
     def create(self, request, *args, **kwargs):
-        game_obj = Game.objects.get(game=request.data['game'])
+        game_obj = Game.objects.get(game=request.data['game_id'])
         lotto_tickets = []
         tickets_from_remote_server = {}
-        _ticket_ids = [ticket_obj.ticket_id for ticket_obj in self.lotto_tickets_by_game_objs(request.data['game'])]
+        _ticket_ids = [ticket_obj.ticket_id for ticket_obj in self.lotto_tickets_by_game_objs(request.data['game_id'])]
 
         for i in range(1, QUANTITY_TICKETS):
             for ticket_id, val in self._get_tickets_from_json(self.LOTTO_URL, self.LOTTO_HEADERS).items():
@@ -48,8 +48,8 @@ class LottoTicketsViewSet(viewsets.ModelViewSet):
             return Response(str(err), status=status.HTTP_400_BAD_REQUEST)
         return Response([], status=status.HTTP_201_CREATED)
 
-    def lotto_tickets_by_game_objs(self, game):
-        return LottoTickets.objects.filter(game_obj__game=game)
+    def lotto_tickets_by_game_objs(self, game_id):
+        return LottoTickets.objects.filter(game_obj__game_id=game_id)
 
     def destroy(self, request, *args, **kwargs):
         self.lotto_tickets_by_game_objs(kwargs['pk']).delete()
