@@ -40,8 +40,8 @@ class Parser90Numbers(LottoParser):
         self._validate_numbers(str_numbers)
 
         game_tags = self.soup.find('div', id='content').find('h1')
-        game = re.search(r'№\d{3,4},', game_tags.text)[0].replace('№', '').replace(',', '')
-        self.validate_game(game)
+        game_id = re.search(r'№\d{3,4},', game_tags.text)[0].replace('№', '').replace(',', '')
+        self.validate_game(game_id)
 
         no_number_tags = self.soup.find('div', class_='drawing_win_numbers barrels').find_all('li')
         str_no_numbers = ''.join([tag.text for tag in no_number_tags])
@@ -50,5 +50,6 @@ class Parser90Numbers(LottoParser):
         return {'numbers': str_numbers,
                 'last_win_number_card': dirty_numbers[1][-2:],
                 'last_win_number_ticket': dirty_numbers[2][-2:],
-                'game': game,
+                'game_id': game_id,
+                'name_game': self.name_game,
                 }

@@ -14,4 +14,4 @@ class ChoiseParsers():
         _url_archive = get_from_config('lotto_url', f'url_archive_{self.name_game}')
         _url_archive_page = f'{_url_archive}{self.page}'
         response = requests.get(f'{_url_archive_page}', self.LOTTO_HEADERS)
-        return get_class_parser(self.name_game)(response, self.page)
+        return get_class_parser(self.name_game)(response, self.name_game, self.page)
