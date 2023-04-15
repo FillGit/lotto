@@ -32,33 +32,27 @@ class GameSerializer(serializers.ModelSerializer):
         return self._validate_win_number_more(value, MAX_NUMBERS_IN_LOTTO, 'last_win_number_ticket')
 
     def validate_numbers(self, value):
-        list_str_numbers = Game.get_list_str_numbers(value, True)
-        not_numeric = [n for n in list_str_numbers if n.isnumeric() is False]
-        if not_numeric:
-            raise serializers.ValidationError(
-                f"You don't have a numerical value - {not_numeric}")
-        many_symbols = [n for n in list_str_numbers if len(n) > 2]
+        many_symbols = [n for n in value if len(str(n)) > 2]
         if many_symbols:
             raise serializers.ValidationError(
                 f"There is a value that has more than 2 characters - {many_symbols}")
-        if len(list_str_numbers) > MAX_NUMBERS_IN_LOTTO:
-            raise serializers.ValidationError(
-                f"You have many more numbers than {MAX_NUMBERS_IN_LOTTO} - {len(list_str_numbers)}")
-        if len(list_str_numbers) != len(set(list_str_numbers)):
-            dup = {x for x in list_str_numbers if list_str_numbers.count(x) > 1}
+        if len(value) != len(set(value)):
+            dup = {x for x in value if value.count(x) > 1}
             raise serializers.ValidationError(
                 f"You have same numbers - {dup}")
-        return " ".join(list_str_numbers)
+        return value
 
     win_card = serializers.DictField(source='get_win_card', read_only=True)
     win_ticket = serializers.DictField(source='get_win_ticket', read_only=True)
 
     def to_internal_value(self, data):
+        if 'str_numbers' in data and data['str_numbers']:
+            list_str_numbers = Game.get_list_str_numbers(data['str_numbers'], True)
+            data['numbers'] = [int(num) for num in list_str_numbers]
         if 'auto_win' in data and data['auto_win']:
-            dirty_numbers = [num for num in data['numbers'].replace(' ', ',').split(',') if num]
+            dirty_numbers = [num for num in data['str_numbers'].replace(' ', ',').split(',') if num]
             data['last_win_number_card'] = dirty_numbers[1][-2:]
             data['last_win_number_ticket'] = dirty_numbers[2][-2:]
-            return super().to_internal_value(data)
         return super().to_internal_value(data)
 
     class Meta:

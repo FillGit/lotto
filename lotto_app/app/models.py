@@ -1,4 +1,5 @@
-from django.core.validators import MinValueValidator
+from django.contrib.postgres.fields import ArrayField
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 # Create your models here.
@@ -7,13 +8,22 @@ from django.db import models
 class Game(models.Model):
     name_game = models.CharField(max_length=25, blank=False)
     game_id = models.CharField(max_length=20, blank=False, unique=True)
-    numbers = models.CharField(max_length=2000)
+    numbers = ArrayField(
+        models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(90)]),
+        size=90)
+
     last_win_number_card = models.PositiveIntegerField(blank=True, null=True,
                                                        validators=[MinValueValidator(1)])
     last_win_number_ticket = models.PositiveIntegerField(blank=True, null=True,
                                                          validators=[MinValueValidator(1)])
-    no_numbers = models.CharField(max_length=2000, blank=True, null=True)
-    add_numbers = models.CharField(max_length=20, blank=True, null=True)
+
+    no_numbers = ArrayField(
+        models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(89)]),
+        size=89, blank=True, null=True)
+
+    add_numbers = ArrayField(
+        models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(89)]),
+        size=89, blank=True, null=True)
 
     def __str__(self):
         """
@@ -27,11 +37,9 @@ class Game(models.Model):
         super().save(*args, **kwargs)
 
     def get_no_numbers(self):
-        list_numbers = [int(num) for num in self.numbers.split(' ')]
-        no_numbers = [str(num) for num in
-                      sorted([num for num in range(1, 91) if num not in list_numbers])]
+        no_numbers = [num for num in sorted([num for num in range(1, 91) if num not in self.numbers])]
         if no_numbers:
-            return ' '.join(no_numbers)
+            return no_numbers
         return None
 
     def get_win_list(self, last_win_number=None):
@@ -39,7 +47,7 @@ class Game(models.Model):
             last_win_number = self.last_win_number_ticket
 
         win_list = []
-        for num in self.get_game_numbers():
+        for num in self.numbers:
             win_list.append(num)
             if last_win_number == num:
                 break

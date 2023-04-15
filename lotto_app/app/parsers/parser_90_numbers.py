@@ -47,7 +47,7 @@ class Parser90Numbers(LottoParser):
         str_no_numbers = ''.join([tag.text for tag in no_number_tags])
         self._validate_no_number(str_no_numbers, str_numbers)
 
-        return {'numbers': str_numbers,
+        return {'str_numbers': str_numbers,
                 'last_win_number_card': dirty_numbers[1][-2:],
                 'last_win_number_ticket': dirty_numbers[2][-2:],
                 'game_id': game_id,
