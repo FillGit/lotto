@@ -1,4 +1,3 @@
-from copy import deepcopy
 from random import shuffle
 
 from lotto_app.app.models import Game
@@ -26,17 +25,16 @@ class GameFactory():
             self.fields_games = self.get_fields_games()
 
     def get_no_numbers(self, numbers, numbers_in_lotto):
-        list_numbers = [int(num) for num in numbers.split(' ')]
-        no_numbers = [str(num) for num in
-                      sorted([num for num in range(1, numbers_in_lotto+1) if num not in list_numbers])]
+        no_numbers = [num for num in
+                      sorted([num for num in range(1, numbers_in_lotto+1) if num not in numbers])]
         if no_numbers:
-            return ' '.join(no_numbers)
+            return no_numbers
         return None
 
     def get_fields(self, game_id, name_game, numbers_in_lotto, no_numbers_in_lotto):
         list_numbers = list(range(1, numbers_in_lotto+1))
         shuffle(list_numbers)
-        numbers = ' '.join([str(n) for n in list_numbers[0:numbers_in_lotto-no_numbers_in_lotto]])
+        numbers = [n for n in list_numbers[0:numbers_in_lotto-no_numbers_in_lotto]]
         return {
             'name_game': name_game,
             'game_id': game_id,
@@ -58,20 +56,24 @@ class GameFactory():
     def set_games_db(self):
         return Game.objects.bulk_create([Game(**fields) for fields in self.fields_games])
 
-    def _add_zero(self, str_number=None):
+    def _add_zero(self, number=None):
+        str_number = str(number)
         if len(str_number) > 1:
             return str_number
         return f'0{str_number}'
 
     def get_game_json(self, index=0):
-        _fields_game = deepcopy(self.fields_games[index])
+        return self.fields_games[index]
+
+    def get_game_str_numbers_json(self, index=0):
+        _fields_game = self.fields_games[index]
         return {
             'name_game': _fields_game['name_game'],
             'game_id': _fields_game['game_id'],
-            'numbers': ' '.join([self._add_zero(num) for num in _fields_game['numbers'].split(' ')]),
+            'str_numbers': ' '.join([self._add_zero(num) for num in _fields_game['numbers']]),
             'last_win_number_card': _fields_game['last_win_number_card'],
             'last_win_number_ticket': _fields_game['last_win_number_ticket'],
-            'no_numbers': ' '.join([self._add_zero(num) for num in _fields_game['no_numbers'].split(' ')])
+            'str_no_numbers': ' '.join([self._add_zero(num) for num in _fields_game['no_numbers']])
         }
 
     def _get_auto_win_numbers(self, numbers, line, win_card_by_account, win_ticket_by_account):
@@ -84,12 +86,12 @@ class GameFactory():
         return ' '.join(list_auto_win_numbers)
 
     def get_game_auto_win_json(self, line=7, win_card_by_account=37, win_ticket_by_account=62):
-        _fields_game = self.get_game_json()
-        auto_win_numbers = self._get_auto_win_numbers(_fields_game['numbers'],
+        _fields_game = self.get_game_str_numbers_json()
+        auto_win_numbers = self._get_auto_win_numbers(_fields_game['str_numbers'],
                                                       line, win_card_by_account, win_ticket_by_account)
         return {
             'name_game': _fields_game['name_game'],
             'game_id': _fields_game['game_id'],
-            'numbers': auto_win_numbers,
+            'str_numbers': auto_win_numbers,
             'auto_win': True,
         }

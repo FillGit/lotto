@@ -37,11 +37,9 @@ class Game(models.Model):
         super().save(*args, **kwargs)
 
     def get_no_numbers(self):
-        list_numbers = [int(num) for num in self.numbers.split(' ')]
-        no_numbers = [str(num) for num in
-                      sorted([num for num in range(1, 91) if num not in list_numbers])]
+        no_numbers = [num for num in sorted([num for num in range(1, 91) if num not in self.numbers])]
         if no_numbers:
-            return ' '.join(no_numbers)
+            return no_numbers
         return None
 
     def get_win_list(self, last_win_number=None):
@@ -49,7 +47,7 @@ class Game(models.Model):
             last_win_number = self.last_win_number_ticket
 
         win_list = []
-        for num in self.get_game_numbers():
+        for num in self.numbers:
             win_list.append(num)
             if last_win_number == num:
                 break

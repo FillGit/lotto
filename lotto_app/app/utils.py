@@ -87,7 +87,7 @@ def index_9_parts(cost_numbers, bingo):
 def get_game_info(game_obj, mult=None):
     if not mult:
         mult = 1
-    numbers = game_obj.get_game_numbers()
+    numbers = game_obj.numbers
     cost_numbers = get_cost_numbers(numbers, mult)
 
     return {'numbers': numbers,
