@@ -15,11 +15,19 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='game',
             name='add_numbers',
-            field=django.contrib.postgres.fields.ArrayField(base_field=models.PositiveIntegerField(validators=[django.core.validators.MinValueValidator(1), django.core.validators.MaxValueValidator(89)]), blank=True, null=True, size=89),
+            field=django.contrib.postgres.fields.ArrayField(
+                base_field=models.PositiveIntegerField(
+                    validators=[django.core.validators.MinValueValidator(1),
+                                django.core.validators.MaxValueValidator(89)]),
+                blank=True, null=True, size=89),
         ),
         migrations.AlterField(
             model_name='game',
             name='numbers',
-            field=django.contrib.postgres.fields.ArrayField(base_field=models.PositiveIntegerField(validators=[django.core.validators.MinValueValidator(1), django.core.validators.MaxValueValidator(90)]), size=90),
+            field=django.contrib.postgres.fields.ArrayField(
+                base_field=models.PositiveIntegerField(
+                    validators=[django.core.validators.MinValueValidator(1),
+                                django.core.validators.MaxValueValidator(90)]),
+                size=90),
         ),
     ]

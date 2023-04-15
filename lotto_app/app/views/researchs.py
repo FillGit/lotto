@@ -11,20 +11,20 @@ class ResearchViewSet(viewsets.ModelViewSet):
     queryset = Game.objects.all().order_by('game_id')
 
     def get_game_obj(self):
-        return Game.objects.get(game=self.kwargs['pk'])
+        return Game.objects.get(game_id=self.kwargs['pk'])
 
     @action(detail=True, url_path='combination_comparisons', methods=['get'])
     def combination_comparisons(self, request, pk=None):
-        main_game_obj = self.queryset.get(game=pk)
+        main_game_obj = self.queryset.get(game_id=pk)
 
-        main_list_win_numbers = main_game_obj.get_game_numbers()[:60]
+        main_list_win_numbers = main_game_obj.numbers[:60]
         dict_common_numbers = {}
 
         for _obj in self.queryset:
-            if _obj.game != pk:
-                _comparison_list_win_numbers = _obj.get_game_numbers()[:60]
+            if _obj.game_id != pk:
+                _comparison_list_win_numbers = _obj.numbers[:60]
                 set_common_numbers = set(main_list_win_numbers) & set(_comparison_list_win_numbers)
-                dict_common_numbers.update({_obj.game: [len(set_common_numbers), sorted(list(set_common_numbers))]})
+                dict_common_numbers.update({_obj.game_id: [len(set_common_numbers), sorted(list(set_common_numbers))]})
 
         resp = {'combination_comparisons': pk}
         resp.update(dict(sorted(dict_common_numbers.items(), key=lambda item: item[1], reverse=True)))
@@ -33,7 +33,7 @@ class ResearchViewSet(viewsets.ModelViewSet):
     @action(detail=True, url_path='search_win_ticket', methods=['get'])
     def search_win_ticket(self, request, pk=None):
         last_win_number_ticket = int(request.query_params.get('last_win_number_ticket', None))
-        main_game_obj = self.queryset.get(game=pk)
+        main_game_obj = self.queryset.get(game_id=pk)
         main_set_win_numbers = {int(num) for num in main_game_obj.get_win_list(last_win_number_ticket)}
 
         ticket_ids = []
@@ -56,11 +56,11 @@ class ResearchViewSet(viewsets.ModelViewSet):
             return Response({"error": "query_params doesn't game_end"},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        game_objs = Game.objects.filter(game__in=[g for g in range(game_start, game_end+1)])
+        game_objs = Game.objects.filter(game_id__in=[g for g in range(game_start, game_end+1)])
         dict_no_numbers = {}
         game_index_9_parts = {}
         for game_obj in game_objs:
-            game = game_obj.game
+            game = game_obj.game_id
             last_total_cost_numbers = GameViewSet.get_last_games_info(int(game) - 1)['total_cost_numbers']
             game_info = get_game_info(game_obj)
             dict_no_numbers[game] = GameViewSet.get_five_games_no_numbers(last_total_cost_numbers, game_info)
