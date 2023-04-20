@@ -96,12 +96,16 @@ class GameViewSet(viewsets.ModelViewSet):
         }
         return Response(indexes, status=200)
 
-    def _value_previous_games(self, how_many, previous_games, current_game):
+    def _value_previous_games(self, how_numbers, previous_games, current_game):
         value_previous_games = {i: 0 for i in range(1, 91)}
         number_info = []
-        for game_id in range(current_game - previous_games + 1, current_game + 1):
-            number_info.append(get_game_info(
-                Game.objects.get(game_id=int(game_id)))['numbers'][:how_many])
+
+        game_objs = Game.objects.filter(
+            game_id__in=[g for g in range(current_game - previous_games + 1, current_game + 1)])
+        for game_obj in game_objs:
+            if not how_numbers:
+                how_numbers = game_obj.get_win_ticket()['by_account']
+            number_info.append(get_game_info(game_obj)['numbers'][:int(how_numbers)])
 
         for _info in number_info:
             for num in _info:
@@ -111,10 +115,10 @@ class GameViewSet(viewsets.ModelViewSet):
     @action(detail=False, url_path='value_previous_games', methods=['get'])
     def value_previous_games(self, request):
         print('value_previous_games/')
-        how_many = int(request.query_params.get('how_many'))
+        how_numbers = request.query_params.get('how_numbers', None)
         previous_games = int(request.query_params.get('previous_games'))
         current_game = int(request.query_params.get('current_game'))
-        return Response(self._value_previous_games(how_many, previous_games, current_game),
+        return Response(self._value_previous_games(how_numbers, previous_games, current_game),
                         status=200)
 
     @action(detail=False, url_path='parsers', methods=['post'])
