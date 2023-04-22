@@ -10,11 +10,13 @@ from lotto_app.config import get_amount_games, get_factor_games
 
 
 class GameViewSet(viewsets.ModelViewSet):
-    queryset = Game.objects.all().order_by('game_id')
     serializer_class = GameSerializer
 
+    def get_queryset(self):
+        return Game.objects.filter(name_game=self.kwargs['ng']).order_by('game_id')
+
     def get_object(self):
-        return Game.objects.get(game_id=self.kwargs['pk'])
+        return Game.objects.get(name_game=self.kwargs['ng'], game_id=self.kwargs['pk'])
 
     def game_request(self, request):
         game_id = request.query_params.get('game_id')
@@ -95,31 +97,6 @@ class GameViewSet(viewsets.ModelViewSet):
             'no_numbers': self.get_five_games_no_numbers(last_total_cost_numbers, game_info),
         }
         return Response(indexes, status=200)
-
-    def _value_previous_games(self, how_numbers, previous_games, current_game):
-        value_previous_games = {i: 0 for i in range(1, 91)}
-        number_info = []
-
-        game_objs = Game.objects.filter(
-            game_id__in=[g for g in range(current_game - previous_games + 1, current_game + 1)])
-        for game_obj in game_objs:
-            if not how_numbers:
-                how_numbers = game_obj.get_win_ticket()['by_account']
-            number_info.append(get_game_info(game_obj)['numbers'][:int(how_numbers)])
-
-        for _info in number_info:
-            for num in _info:
-                value_previous_games[num] += 1
-        return value_previous_games
-
-    @action(detail=False, url_path='value_previous_games', methods=['get'])
-    def value_previous_games(self, request):
-        print('value_previous_games/')
-        how_numbers = request.query_params.get('how_numbers', None)
-        previous_games = int(request.query_params.get('previous_games'))
-        current_game = int(request.query_params.get('current_game'))
-        return Response(self._value_previous_games(how_numbers, previous_games, current_game),
-                        status=200)
 
     @action(detail=False, url_path='parsers', methods=['post'])
     def parsers(self, request):

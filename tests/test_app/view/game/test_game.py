@@ -5,7 +5,7 @@ from tests.helpers import GameFactory
 
 
 class GameTestApiCase(WebTest):
-    endpoint = '/game/'
+    endpoint = '/game/test_lotto1/'
 
     def setUp(self):
         super(GameTestApiCase, self).setUp()
