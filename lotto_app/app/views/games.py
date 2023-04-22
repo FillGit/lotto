@@ -18,9 +18,9 @@ class GameViewSet(viewsets.ModelViewSet):
     def get_object(self):
         return Game.objects.get(name_game=self.kwargs['ng'], game_id=self.kwargs['pk'])
 
-    def game_request(self, request):
-        game_id = request.query_params.get('game_id')
-        return game_id, Game.objects.get(game_id=game_id)
+    def game_request(self):
+        game_id = self.kwargs['pk']
+        return game_id, Game.objects.get(name_game=self.kwargs['ng'], game_id=game_id)
 
     @staticmethod
     def get_last_games_info(game_id):
@@ -46,10 +46,10 @@ class GameViewSet(viewsets.ModelViewSet):
                                                 [num for num in list(total_cost_numbers.keys())[0:30]])
         }
 
-    @action(detail=False, url_path='info', methods=['get'])
-    def info(self, request):
+    @action(detail=True, url_path='info', methods=['get'])
+    def info(self, request, ng, pk):
         print('info/')
-        game_id, game_obj = self.game_request(request)
+        game_id, game_obj = self.game_request()
         return Response(get_game_info(game_obj), status=200)
 
     @action(detail=False, url_path='last_games_info', methods=['get'])
