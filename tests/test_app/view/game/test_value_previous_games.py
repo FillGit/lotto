@@ -5,7 +5,7 @@ from tests.helpers import GameFactory
 
 
 class ValuePreviousGamesTest(WebTest):
-    endpoint = '/game/test_lotto1/value_previous_games/'
+    endpoint = '/test_lotto1/value_previous_games/'
 
     def setUp(self):
         super(ValuePreviousGamesTest, self).setUp()

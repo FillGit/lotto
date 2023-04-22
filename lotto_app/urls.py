@@ -14,7 +14,7 @@ router = DefaultRouter()
 router.register(r'users', UserViewSet)
 router.register(r'groups', GroupViewSet)
 
-router.register(r'', GameViewSet, basename='game')
+router.register(r'game', GameViewSet, basename='game')
 
 router.register(r'value_previous_games', ValuePreviousGamesViewSet, basename='value_previous_games')
 
@@ -29,6 +29,6 @@ router.register(r'lotto_tickets', LottoTicketsViewSet, basename='lotto_tickets')
 # Wire up our API using automatic URL routing.
 # Additionally, we include login URLs for the browsable API.
 urlpatterns = [
-    path(r'game/<str:ng>/', include(router.urls)),
-    path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))
+    path(r'<str:ng>/', include(router.urls)),
+    path(r'<str:ng>/api-auth/', include('rest_framework.urls', namespace='rest_framework'))
 ]
