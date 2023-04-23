@@ -43,8 +43,6 @@ class GameViewSet(viewsets.ModelViewSet):
             'min_cost': str_total_cost_numbers[0],
             'max_cost': str_total_cost_numbers[89],
             'total_cost_numbers': total_cost_numbers,
-            'total_index_bingo_30': index_bingo(total_cost_numbers,
-                                                [num for num in list(total_cost_numbers.keys())[0:30]]),
         }
 
     @action(detail=True, url_path='info', methods=['get'])
@@ -54,10 +52,10 @@ class GameViewSet(viewsets.ModelViewSet):
         factor_games = get_factor_games(1)
         return Response(get_game_info(game_obj, factor_games[0]), status=200)
 
-    @action(detail=False, url_path='last_games_info', methods=['get'])
-    def last_games_info(self, request):
-        print('last_games_info/')
-        game_id = request.query_params.get('game_id')
+    @action(detail=True, url_path='several_games_info', methods=['get'])
+    def several_games_info(self, request, ng, pk):
+        print('several_games_info/')
+        game_id, game_obj = self.game_request()
         return Response(self.get_several_games_info(game_id), status=200)
 
     def _condition_numbers(self, previous_games, current_game, condition):
@@ -80,7 +78,7 @@ class GameViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, url_path='future_game_30', methods=['get'])
     def future_game_30(self, request, ng, pk):
-        print('index_bingo_30/')
+        print('future_game_30/')
         game_id, game_obj = self.game_request()
         total_cost_numbers = self.get_several_games_info(game_id)['total_cost_numbers']
         game_info = get_game_info(game_obj)
