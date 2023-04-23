@@ -6,6 +6,7 @@ from lotto_app.app.models import Game
 from lotto_app.app.parsers.choise_parsers import ChoiseParsers
 from lotto_app.app.serializers import GameSerializer
 from lotto_app.app.utils import get_game_info, index_9_parts, index_bingo
+from lotto_app.app.views.value_previous_games import ValuePreviousGamesViewSet
 from lotto_app.config import get_amount_games, get_factor_games
 
 
@@ -19,11 +20,11 @@ class GameViewSet(viewsets.ModelViewSet):
         return Game.objects.get(name_game=self.kwargs['ng'], game_id=self.kwargs['pk'])
 
     def game_request(self):
-        game_id = self.kwargs['pk']
+        game_id = int(self.kwargs['pk'])
         return game_id, Game.objects.get(name_game=self.kwargs['ng'], game_id=game_id)
 
     @staticmethod
-    def get_last_games_info(game_id):
+    def get_several_games_info(game_id):
         all_cost_numbers = {}
         amount_games = get_amount_games()
         factor_games = get_factor_games(amount_games)
@@ -43,58 +44,52 @@ class GameViewSet(viewsets.ModelViewSet):
             'max_cost': str_total_cost_numbers[89],
             'total_cost_numbers': total_cost_numbers,
             'total_index_bingo_30': index_bingo(total_cost_numbers,
-                                                [num for num in list(total_cost_numbers.keys())[0:30]])
+                                                [num for num in list(total_cost_numbers.keys())[0:30]]),
         }
 
     @action(detail=True, url_path='info', methods=['get'])
     def info(self, request, ng, pk):
         print('info/')
         game_id, game_obj = self.game_request()
-        return Response(get_game_info(game_obj), status=200)
+        factor_games = get_factor_games(1)
+        return Response(get_game_info(game_obj, factor_games[0]), status=200)
 
     @action(detail=False, url_path='last_games_info', methods=['get'])
     def last_games_info(self, request):
         print('last_games_info/')
         game_id = request.query_params.get('game_id')
-        return Response(self.get_last_games_info(game_id), status=200)
+        return Response(self.get_several_games_info(game_id), status=200)
 
-    def _condition_numbers(self, how_many, previous_games, current_game, condition):
-        return {int(num) for num, value in self._value_previous_games(how_many, previous_games, current_game).items()
-                if value == condition}
+    def _condition_numbers(self, previous_games, current_game, condition):
+        _value_previous_games = ValuePreviousGamesViewSet.value_previous_games(
+            self.kwargs['ng'], None, previous_games, current_game)
+        return {int(num) for num, value in _value_previous_games.items() if value == condition}
 
     def _get_good_numbers(self, current_game):
-        good_numbers = self._condition_numbers(45, 5, current_game, 0)
-        good_numbers.update(self._condition_numbers(40, 5, current_game, 0))
-        good_numbers.update(self._condition_numbers(45, 3, current_game, 0))
-        good_numbers.update(self._condition_numbers(40, 3, current_game, 0))
+        good_numbers = self._condition_numbers(6, current_game, 0)
+        good_numbers.update(self._condition_numbers(5, current_game, 0))
+        good_numbers.update(self._condition_numbers(4, current_game, 0))
+        good_numbers.update(self._condition_numbers(3, current_game, 0))
         return good_numbers
 
     def _get_bad_numbers(self, current_game):
-        bad_numbers = self._condition_numbers(45, 5, current_game, 5)
-        bad_numbers.update(self._condition_numbers(40, 5, current_game, 5))
-        bad_numbers.update(self._condition_numbers(45, 5, current_game, 4))
-        bad_numbers.update(self._condition_numbers(45, 3, current_game, 3))
-        bad_numbers.update(self._condition_numbers(40, 3, current_game, 3))
+        bad_numbers = self._condition_numbers(13, current_game, 13)
+        bad_numbers.update(self._condition_numbers(12, current_game, 12))
+        # bad_numbers.update(self._condition_numbers(9, current_game, 9))
         return bad_numbers
 
-    @staticmethod
-    def get_five_games_no_numbers(last_total_cost_numbers, game_info):
-        return {num: last_total_cost_numbers[int(num)] for num, v in game_info['cost_numbers'].items() if
-                v == 0}
-
-    @action(detail=False, url_path='index_bingo_30', methods=['get'])
-    def index_bingo_30(self, request):
+    @action(detail=True, url_path='future_game_30', methods=['get'])
+    def future_game_30(self, request, ng, pk):
         print('index_bingo_30/')
-        game_id, game_obj = self.game_request(request)
-        last_total_cost_numbers = self.get_last_games_info(int(game_id) - 1)['total_cost_numbers']
+        game_id, game_obj = self.game_request()
+        total_cost_numbers = self.get_several_games_info(game_id)['total_cost_numbers']
         game_info = get_game_info(game_obj)
 
         indexes = {
-            'index_bingo': index_bingo(last_total_cost_numbers, game_info['bingo_30']),
-            'index_9_parts': index_9_parts(last_total_cost_numbers, game_info['bingo_30']),
+            'index_bingo': index_bingo(total_cost_numbers, game_info['bingo_30']),
+            'index_9_parts': index_9_parts(total_cost_numbers, game_info['bingo_30']),
             'good_numbers': self._get_good_numbers(int(game_id)),
             'bad_numbers': self._get_bad_numbers(int(game_id)),
-            'no_numbers': self.get_five_games_no_numbers(last_total_cost_numbers, game_info),
         }
         return Response(indexes, status=200)
 

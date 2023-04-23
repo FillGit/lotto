@@ -2,7 +2,6 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 
 from lotto_app.app.models import Game
-from lotto_app.app.utils import get_game_info
 
 
 class ValuePreviousGamesViewSet(viewsets.ModelViewSet):
@@ -18,7 +17,7 @@ class ValuePreviousGamesViewSet(viewsets.ModelViewSet):
         for game_obj in game_objs:
             if not how_numbers:
                 how_numbers = game_obj.get_win_ticket()['by_account']
-            number_info.append(get_game_info(game_obj)['numbers'][:int(how_numbers)])
+            number_info.append(game_obj.numbers[:int(how_numbers)])
 
         for _info in number_info:
             for num in _info:
