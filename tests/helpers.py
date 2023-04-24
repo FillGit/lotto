@@ -2,7 +2,6 @@ from random import shuffle
 
 from lotto_app.app.models import Game
 
-
 """
 Default win_card and win_ticket of the GameFactory class:
 

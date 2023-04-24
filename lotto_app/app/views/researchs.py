@@ -8,19 +8,21 @@ from lotto_app.app.views.games import GameViewSet
 
 
 class ResearchViewSet(viewsets.ModelViewSet):
-    queryset = Game.objects.all().order_by('game_id')
+
+    def get_queryset(self):
+        return Game.objects.filter(name_game=self.kwargs['ng']).order_by('game_id')
 
     def get_game_obj(self):
         return Game.objects.get(game_id=self.kwargs['pk'])
 
     @action(detail=True, url_path='combination_comparisons', methods=['get'])
-    def combination_comparisons(self, request, pk=None):
-        main_game_obj = self.queryset.get(game_id=pk)
+    def combination_comparisons(self, request, ng, pk=None):
+        main_game_obj = self.get_queryset().get(game_id=pk)
 
         main_list_win_numbers = main_game_obj.numbers[:60]
         dict_common_numbers = {}
 
-        for _obj in self.queryset:
+        for _obj in self.get_queryset():
             if _obj.game_id != pk:
                 _comparison_list_win_numbers = _obj.numbers[:60]
                 set_common_numbers = set(main_list_win_numbers) & set(_comparison_list_win_numbers)
@@ -31,9 +33,9 @@ class ResearchViewSet(viewsets.ModelViewSet):
         return Response(resp, status=200)
 
     @action(detail=True, url_path='search_win_ticket', methods=['get'])
-    def search_win_ticket(self, request, pk=None):
+    def search_win_ticket(self, request, ng, pk=None):
         last_win_number_ticket = int(request.query_params.get('last_win_number_ticket', None))
-        main_game_obj = self.queryset.get(game_id=pk)
+        main_game_obj = self.get_queryset().get(game_id=pk)
         main_set_win_numbers = {int(num) for num in main_game_obj.get_win_list(last_win_number_ticket)}
 
         ticket_ids = []
@@ -44,29 +46,32 @@ class ResearchViewSet(viewsets.ModelViewSet):
                 ticket_ids.append(ticket_obj.ticket_id)
         return Response(ticket_ids, status=200)
 
-    @action(detail=False, url_path='games_no_numbers', methods=['get'])
-    def games_no_numbers(self, request):
-        game_start = int(request.query_params.get('game_start', 0))
-        game_end = int(request.query_params.get('game_end', 0))
+    @action(detail=True, url_path='games_no_numbers', methods=['get'])
+    def games_no_numbers(self, request, ng, pk):
+        game_start = int(pk)
+        how_games = int(request.query_params.get('how_games', 0))
 
         if not game_start:
             return Response({"error": "query_params doesn't game_start"},
                             status=status.HTTP_400_BAD_REQUEST)
-        if not game_end:
-            return Response({"error": "query_params doesn't game_end"},
+        if not how_games:
+            return Response({"error": "query_params doesn't how_games"},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        game_objs = Game.objects.filter(game_id__in=[g for g in range(game_start, game_end+1)])
+        game_objs = Game.objects.filter(
+            game_id__in=[g for g in range(game_start-how_games, game_start+1)],
+            name_game=ng)
         dict_no_numbers = {}
         game_index_9_parts = {}
         for game_obj in game_objs:
-            game = game_obj.game_id
-            last_total_cost_numbers = GameViewSet.get_last_games_info(int(game) - 1)['total_cost_numbers']
+            game_id = game_obj.game_id
+            last_total_cost_numbers = GameViewSet.get_several_games_info(int(game_id)-1)['total_cost_numbers']
             game_info = get_game_info(game_obj)
-            dict_no_numbers[game] = GameViewSet.get_five_games_no_numbers(last_total_cost_numbers, game_info)
-            game_index_9_parts[game] = index_9_parts(last_total_cost_numbers,
-                                                     dict_no_numbers[game].keys())
-            dict_no_numbers[game]['_index_9_parts'] = game_index_9_parts[game]
+            dict_no_numbers[game_id] = GameViewSet.get_several_games_no_numbers(
+                last_total_cost_numbers, game_info)
+            game_index_9_parts[game_id] = index_9_parts(last_total_cost_numbers,
+                                                        dict_no_numbers[game_id].keys())
+            dict_no_numbers[game_id]['_index_9_parts'] = game_index_9_parts[game_id]
 
         dict_no_numbers['all_games_index_9_parts'] = {}
         for _game, _index_9_parts in game_index_9_parts.items():
