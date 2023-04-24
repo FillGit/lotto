@@ -45,6 +45,11 @@ class GameViewSet(viewsets.ModelViewSet):
             'total_cost_numbers': total_cost_numbers,
         }
 
+    @staticmethod
+    def get_several_games_no_numbers(total_cost_numbers, game_info):
+        return {num: total_cost_numbers[int(num)] for num, v in game_info['cost_numbers'].items() if
+                v == 0}
+
     @action(detail=True, url_path='info', methods=['get'])
     def info(self, request, ng, pk):
         print('info/')
