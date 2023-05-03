@@ -78,7 +78,6 @@ class GameViewSet(viewsets.ModelViewSet):
     def _condition_numbers(self, previous_games, current_game, condition):
         _value_previous_games = ValuePreviousGamesViewSet.value_previous_games(
             self.kwargs['ng'], None, previous_games, current_game)
-        print(previous_games, current_game, _value_previous_games)
 
         return {int(num) for num, value in _value_previous_games.items() if value == condition}
 

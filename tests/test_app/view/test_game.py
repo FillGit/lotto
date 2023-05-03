@@ -195,13 +195,12 @@ class GetSeveralGamesInfoTest(TestCase):
         GameFactory(amount_games=2, in_order_numbers=True)
         _fields_games = GameFactory(amount_games=1,
                                     only_games_json=True).get_game_json()
-        GameFactory(amount_games=1,
-                    fields_games=[{
-                        'name_game': _fields_games['name_game'],
-                        'game_id': _fields_games['game_id'],
-                        'numbers': _fields_games['numbers'],
-                        'no_numbers': _fields_games['no_numbers']
-                    }])
+        GameFactory(fields_games=[{
+            'name_game': _fields_games['name_game'],
+            'game_id': _fields_games['game_id'],
+            'numbers': _fields_games['numbers'],
+            'no_numbers': _fields_games['no_numbers']
+        }])
         GameFactory(amount_games=1, in_order_numbers=True)
         assert_that(Game.objects.count(), is_(4))
         info = GameViewSet.get_several_games_info('test_lotto1', 4)
@@ -209,3 +208,25 @@ class GetSeveralGamesInfoTest(TestCase):
         assert_that(info['min_cost'], is_(expected_resp['min_cost']))
         assert_that(info['max_cost'], is_(expected_resp['max_cost']))
         assert_that(info['total_cost_numbers'], is_(expected_resp['total_cost_numbers']))
+
+
+class FutureGame30Test(WebTest):
+    endpoint = '/test_lotto1/game/'
+
+    def setUp(self):
+        super(FutureGame30Test, self).setUp()
+
+    def test_happy_path_future_game_30(self):
+        GameFactory(amount_games=3, in_order_numbers=True)
+        params = {'good_games': 3,
+                  'bad_games': 3}
+        resp = self.app.get(f'{self.endpoint}3/future_game_30/', params=params)
+        assert_that(list(resp.json.keys()),
+                    is_(['index_bingo', 'index_9_parts', 'good_numbers', 'bad_numbers']))
+        assert_that(resp.json['index_bingo'], is_(9480))
+        assert_that(resp.json['index_9_parts'],
+                    is_({'0': 2, '1': 3, '2': 3, '3': 3, '4': 3, '5': 3, '6': 4, '7': 4, '8': 5}))
+        assert_that(resp.json['good_numbers'],
+                    is_([i for i in range(61, 91)]))
+        assert_that(resp.json['bad_numbers'],
+                    is_([i for i in range(1, 61)]))
