@@ -1,3 +1,5 @@
+from django.db.models import IntegerField
+from django.db.models.functions import Cast
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -14,7 +16,10 @@ class GameViewSet(viewsets.ModelViewSet):
     serializer_class = GameSerializer
 
     def get_queryset(self):
-        return Game.objects.filter(name_game=self.kwargs['ng']).order_by('game_id')
+        return Game.objects.filter(
+            name_game=self.kwargs['ng']).annotate(
+            game_id_int=Cast('game_id', output_field=IntegerField())
+        ).order_by('-game_id_int')
 
     def get_object(self):
         return Game.objects.get(name_game=self.kwargs['ng'], game_id=self.kwargs['pk'])
@@ -24,12 +29,19 @@ class GameViewSet(viewsets.ModelViewSet):
         return game_id, Game.objects.get(name_game=self.kwargs['ng'], game_id=game_id)
 
     @staticmethod
-    def get_several_games_info(game_id):
+    def get_several_games_info(ng, game_id):
         all_cost_numbers = {}
         amount_games = get_amount_games()
         factor_games = get_factor_games(amount_games)
+
         q_games = Game.objects.filter(
-            game_id__in=[i for i in range(int(game_id), int(game_id)-amount_games, -1)]).order_by('-game_id')
+            name_game=ng,
+            last_win_number_card__isnull=False,
+            last_win_number_ticket__isnull=False
+        ).annotate(
+            game_id_int=Cast('game_id', output_field=IntegerField())
+        ).filter(game_id_int__lte=game_id, game_id_int__gte=game_id-amount_games-5
+                 ).order_by('-game_id_int')
         all_info = [get_game_info(q_games[i], float(factor_games[i])) for i in range(0, amount_games)]
 
         for num in range(1, 91):
@@ -61,38 +73,37 @@ class GameViewSet(viewsets.ModelViewSet):
     def several_games_info(self, request, ng, pk):
         print('several_games_info/')
         game_id, game_obj = self.game_request()
-        return Response(self.get_several_games_info(game_id), status=200)
+        return Response(self.get_several_games_info(ng, game_id), status=200)
 
     def _condition_numbers(self, previous_games, current_game, condition):
         _value_previous_games = ValuePreviousGamesViewSet.value_previous_games(
             self.kwargs['ng'], None, previous_games, current_game)
+
         return {int(num) for num, value in _value_previous_games.items() if value == condition}
 
-    def _get_good_numbers(self, current_game):
-        good_numbers = self._condition_numbers(6, current_game, 0)
-        good_numbers.update(self._condition_numbers(5, current_game, 0))
-        good_numbers.update(self._condition_numbers(4, current_game, 0))
-        good_numbers.update(self._condition_numbers(3, current_game, 0))
-        return good_numbers
+    def _get_good_numbers(self, game_id, good_games):
+        return self._condition_numbers(good_games, game_id, 0)
 
-    def _get_bad_numbers(self, current_game):
-        bad_numbers = self._condition_numbers(13, current_game, 13)
-        bad_numbers.update(self._condition_numbers(12, current_game, 12))
-        # bad_numbers.update(self._condition_numbers(9, current_game, 9))
+    def _get_bad_numbers(self, game_id, bad_games):
+        bad_numbers = set()
+        for i in range(1, bad_games+1):
+            bad_numbers.update(self._condition_numbers(bad_games, game_id, bad_games))
         return bad_numbers
 
     @action(detail=True, url_path='future_game_30', methods=['get'])
     def future_game_30(self, request, ng, pk):
         print('future_game_30/')
+        good_games = int(request.query_params.get('good_games'))
+        bad_games = int(request.query_params.get('bad_games'))
         game_id, game_obj = self.game_request()
-        total_cost_numbers = self.get_several_games_info(game_id)['total_cost_numbers']
+        total_cost_numbers = self.get_several_games_info(ng, game_id)['total_cost_numbers']
         game_info = get_game_info(game_obj)
 
         indexes = {
             'index_bingo': index_bingo(total_cost_numbers, game_info['bingo_30']),
             'index_9_parts': index_9_parts(total_cost_numbers, game_info['bingo_30']),
-            'good_numbers': self._get_good_numbers(int(game_id)),
-            'bad_numbers': self._get_bad_numbers(int(game_id)),
+            'good_numbers': self._get_good_numbers(game_id, good_games),
+            'bad_numbers': self._get_bad_numbers(game_id, bad_games),
         }
         return Response(indexes, status=200)
 
