@@ -1,3 +1,5 @@
+from django.db.models import IntegerField
+from django.db.models.functions import Cast
 from rest_framework import viewsets
 from rest_framework.response import Response
 
@@ -13,8 +15,14 @@ class ValuePreviousGamesViewSet(viewsets.ModelViewSet):
 
         game_objs = Game.objects.filter(
             name_game=name_game,
-            game_id__in=[g for g in range(current_game - previous_games + 1, current_game + 1)])
-        for game_obj in game_objs:
+            last_win_number_card__isnull=False,
+            last_win_number_ticket__isnull=False
+        ).annotate(
+            game_id_int=Cast('game_id', output_field=IntegerField())
+        ).filter(game_id_int__lte=current_game, game_id_int__gte=current_game-previous_games-5
+                 ).order_by('-game_id_int')
+
+        for game_obj in game_objs[0:previous_games]:
             if not how_numbers:
                 how_numbers = game_obj.get_win_ticket()['by_account']
             number_info.append(game_obj.numbers[:int(how_numbers)])

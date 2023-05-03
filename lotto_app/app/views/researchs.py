@@ -1,3 +1,5 @@
+from django.db.models import IntegerField
+from django.db.models.functions import Cast
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -50,7 +52,6 @@ class ResearchViewSet(viewsets.ModelViewSet):
     def games_no_numbers(self, request, ng, pk):
         game_start = int(pk)
         how_games = int(request.query_params.get('how_games', 0))
-
         if not game_start:
             return Response({"error": "query_params doesn't game_start"},
                             status=status.HTTP_400_BAD_REQUEST)
@@ -59,27 +60,37 @@ class ResearchViewSet(viewsets.ModelViewSet):
                             status=status.HTTP_400_BAD_REQUEST)
 
         game_objs = Game.objects.filter(
-            game_id__in=[g for g in range(game_start-how_games, game_start+1)],
-            name_game=ng)
+            name_game=ng,
+            last_win_number_card__isnull=False,
+            last_win_number_ticket__isnull=False
+        ).annotate(
+            game_id_int=Cast('game_id', output_field=IntegerField())
+        ).filter(game_id_int__lte=game_start, game_id_int__gte=game_start-how_games-5
+                 ).order_by('-game_id_int')[0:how_games]
+
+        if pk not in [game_obj.game_id for game_obj in game_objs]:
+            return Response({"error": f"game_id - {game_start} doesn't have in query"},
+                            status=status.HTTP_400_BAD_REQUEST)
+
         dict_no_numbers = {}
         game_index_9_parts = {}
         for game_obj in game_objs:
-            game_id = game_obj.game_id
-            last_total_cost_numbers = GameViewSet.get_several_games_info(int(game_id)-1)['total_cost_numbers']
+            game_id = int(game_obj.game_id)
+            total_cost_numbers = GameViewSet.get_several_games_info(ng, game_id)['total_cost_numbers']
             game_info = get_game_info(game_obj)
             dict_no_numbers[game_id] = GameViewSet.get_several_games_no_numbers(
-                last_total_cost_numbers, game_info)
-            game_index_9_parts[game_id] = index_9_parts(last_total_cost_numbers,
+                total_cost_numbers, game_info)
+            game_index_9_parts[game_id] = index_9_parts(total_cost_numbers,
                                                         dict_no_numbers[game_id].keys())
-            dict_no_numbers[game_id]['_index_9_parts'] = game_index_9_parts[game_id]
+            dict_no_numbers[game_id]['no_numbers_9_parts'] = game_index_9_parts[game_id]
 
-        dict_no_numbers['all_games_index_9_parts'] = {}
+        dict_no_numbers['all_no_numbers_9_parts'] = {}
         for _game, _index_9_parts in game_index_9_parts.items():
             for part, cost in _index_9_parts.items():
-                if part not in dict_no_numbers['all_games_index_9_parts']:
-                    dict_no_numbers['all_games_index_9_parts'][part] = cost
+                if part not in dict_no_numbers['all_no_numbers_9_parts']:
+                    dict_no_numbers['all_no_numbers_9_parts'][part] = cost
                 else:
-                    dict_no_numbers['all_games_index_9_parts'][part] += cost
-            dict_no_numbers['all_games_index_9_parts'] = dict(
-                sorted(dict_no_numbers['all_games_index_9_parts'].items(), key=lambda item: item[1]))
+                    dict_no_numbers['all_no_numbers_9_parts'][part] += cost
+            dict_no_numbers['all_no_numbers_9_parts'] = dict(
+                sorted(dict_no_numbers['all_no_numbers_9_parts'].items(), key=lambda item: item[1]))
         return Response(dict_no_numbers, status=200)
