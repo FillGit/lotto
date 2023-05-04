@@ -138,3 +138,12 @@ class GameViewSet(viewsets.ModelViewSet):
             serializer_dataset.append(serializer.data)
 
         return Response(serializer_dataset, status=201)
+
+    @action(detail=True, url_path='combination_win_ticket', methods=['get'])
+    def combination_win_ticket(self, request, ng, pk):
+        print('combination_win_ticket/')
+        part_consists_of = int(request.query_params.get('part_consists_of'))
+        order_row = int(request.query_params.get('order_row'))
+        game_id, game_obj = self.game_request()
+        return Response(game_obj.get_combination_win_ticket(part_consists_of, order_row),
+                        status=200)

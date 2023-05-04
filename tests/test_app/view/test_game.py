@@ -230,3 +230,32 @@ class FutureGame30Test(WebTest):
                     is_([i for i in range(61, 91)]))
         assert_that(resp.json['bad_numbers'],
                     is_([i for i in range(1, 61)]))
+
+
+class CombinationWinTicketTest(WebTest):
+    endpoint = '/test_lotto1/game/'
+
+    def _get_parts_numbers(self, part_consists_of, combination_numbers):
+        parts = []
+        i = 0
+        for _ in combination_numbers:
+            if (len(combination_numbers) - i - part_consists_of) < 0:
+                break
+            parts.append(list(combination_numbers)[i:i+part_consists_of])
+            i += 1
+        return parts
+
+    def test_happy_path_combination_win_ticket(self):
+        GameFactory(amount_games=1, in_order_numbers=True)
+        params = {'part_consists_of': 5,
+                  'order_row': 8}
+        resp = self.app.get(f'{self.endpoint}1/combination_win_ticket/', params=params)
+        assert_that(list(resp.json.keys()),
+                    is_(['combination_win_ticket', 'parts', 'numbers_in_row']))
+        assert_that(resp.json['combination_win_ticket'],
+                    is_([i for i in range(1, 61)]))
+        assert_that(resp.json['parts'],
+                    is_(self._get_parts_numbers(params['part_consists_of'],
+                                                resp.json['combination_win_ticket'])))
+        assert_that(resp.json['numbers_in_row'],
+                    is_([[i for i in range(1, 61)]]))
