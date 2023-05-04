@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -87,6 +89,43 @@ class Game(models.Model):
 
     def get_game_numbers(self):
         return list(map(int, self.record_correction_numbers(self.numbers)))
+
+    def _get_numbers_in_row(self, order_row, combination_numbers):
+        _row = 1
+        previous_number = list(combination_numbers)[0]
+        previous_numbers = [previous_number]
+        numbers_in_row = []
+        for number in list(combination_numbers)[1:]:
+            if number == previous_number + 1:
+                _row += 1
+                previous_numbers.append(number)
+                if _row == order_row:
+                    numbers_in_row.append(deepcopy(previous_numbers))
+                elif _row > order_row:
+                    numbers_in_row.pop()
+                    numbers_in_row.append(deepcopy(previous_numbers))
+            else:
+                _row = 1
+                previous_numbers = [number]
+            previous_number = number
+        return numbers_in_row
+
+    def _get_parts_numbers(self, part_consists_of, combination_numbers):
+        parts = []
+        i = 0
+        for _ in combination_numbers:
+            if (len(combination_numbers) - i - part_consists_of) < 0:
+                break
+            parts.append(list(combination_numbers)[i:i+part_consists_of])
+            i += 1
+        return parts
+
+    def get_combination_win_ticket(self, part_consists_of, order_row):
+        combination_win_ticket = set(self.get_win_list(self.last_win_number_ticket))
+        return {'combination_win_ticket': combination_win_ticket,
+                'parts': self._get_parts_numbers(part_consists_of, combination_win_ticket),
+                'numbers_in_row': self._get_numbers_in_row(order_row, combination_win_ticket)
+                }
 
 
 class PurchasedTickets(models.Model):
