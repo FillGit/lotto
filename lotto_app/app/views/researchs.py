@@ -17,8 +17,8 @@ class ResearchViewSet(viewsets.ModelViewSet):
     def get_game_obj(self):
         return Game.objects.get(game_id=self.kwargs['pk'])
 
-    @action(detail=True, url_path='combination_comparisons', methods=['get'])
-    def combination_comparisons(self, request, ng, pk=None):
+    @action(detail=True, url_path='comparison_win_ticket', methods=['get'])
+    def comparison_win_ticket(self, request, ng, pk=None):
         main_game_obj = self.get_queryset().get(game_id=pk)
 
         main_list_win_numbers = main_game_obj.numbers[:60]
@@ -30,7 +30,7 @@ class ResearchViewSet(viewsets.ModelViewSet):
                 set_common_numbers = set(main_list_win_numbers) & set(_comparison_list_win_numbers)
                 dict_common_numbers.update({_obj.game_id: [len(set_common_numbers), sorted(list(set_common_numbers))]})
 
-        resp = {'combination_comparisons': pk}
+        resp = {'main_game': pk}
         resp.update(dict(sorted(dict_common_numbers.items(), key=lambda item: item[1], reverse=True)))
         return Response(resp, status=200)
 
