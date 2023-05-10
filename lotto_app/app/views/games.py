@@ -96,12 +96,12 @@ class GameViewSet(viewsets.ModelViewSet):
         good_games = int(request.query_params.get('good_games'))
         bad_games = int(request.query_params.get('bad_games'))
         game_id, game_obj = self.game_request()
-        total_cost_numbers = self.get_several_games_info(ng, game_id)['total_cost_numbers']
+        last_total_cost_numbers = self.get_several_games_info(ng, game_id-1)['total_cost_numbers']
         game_info = get_game_info(game_obj)
 
         indexes = {
-            'index_bingo': index_bingo(total_cost_numbers, game_info['bingo_30']),
-            'index_9_parts': index_9_parts(total_cost_numbers, game_info['bingo_30']),
+            'current_index_bingo': index_bingo(last_total_cost_numbers, game_info['bingo_30']),
+            'index_9_parts': index_9_parts(last_total_cost_numbers, game_info['bingo_30']),
             'good_numbers': self._get_good_numbers(game_id, good_games),
             'bad_numbers': self._get_bad_numbers(game_id, bad_games),
         }
