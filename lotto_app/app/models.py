@@ -31,7 +31,7 @@ class Game(models.Model):
         """
         String for representing the Model object.
         """
-        return f'id: {self.id}, game: {self.game_id}'
+        return f'id: {self.id}, game_id: {self.game_id}'
 
     def save(self, *args, **kwargs):
         if not self.no_numbers:

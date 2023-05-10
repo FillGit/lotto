@@ -217,13 +217,13 @@ class FutureGame30Test(WebTest):
         super(FutureGame30Test, self).setUp()
 
     def test_happy_path_future_game_30(self):
-        GameFactory(amount_games=3, in_order_numbers=True)
+        GameFactory(amount_games=4, in_order_numbers=True)
         params = {'good_games': 3,
                   'bad_games': 3}
-        resp = self.app.get(f'{self.endpoint}3/future_game_30/', params=params)
+        resp = self.app.get(f'{self.endpoint}4/future_game_30/', params=params)
         assert_that(list(resp.json.keys()),
-                    is_(['index_bingo', 'index_9_parts', 'good_numbers', 'bad_numbers']))
-        assert_that(resp.json['index_bingo'], is_(9480))
+                    is_(['current_index_bingo', 'index_9_parts', 'good_numbers', 'bad_numbers']))
+        assert_that(resp.json['current_index_bingo'], is_(9480))
         assert_that(resp.json['index_9_parts'],
                     is_({'0': 2, '1': 3, '2': 3, '3': 3, '4': 3, '5': 3, '6': 4, '7': 4, '8': 5}))
         assert_that(resp.json['good_numbers'],
