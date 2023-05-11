@@ -164,13 +164,13 @@ class ResearchViewSet(viewsets.ModelViewSet):
             list_win_ticket = game_obj.get_win_list(game_obj.last_win_number_ticket)
             game_index_9_parts[game_id] = index_9_parts(last_total_cost_numbers, list_win_ticket)
 
-        game_index_9_parts['all_game_index_9_parts'] = {}
+        game_index_9_parts['all_games_index_9_parts'] = {}
         for _game, _index_9_parts in game_index_9_parts.items():
             for part, cost in _index_9_parts.items():
-                if part not in game_index_9_parts['all_game_index_9_parts']:
-                    game_index_9_parts['all_game_index_9_parts'][part] = cost
+                if part not in game_index_9_parts['all_games_index_9_parts']:
+                    game_index_9_parts['all_games_index_9_parts'][part] = cost
                 else:
-                    game_index_9_parts['all_game_index_9_parts'][part] += cost
-            game_index_9_parts['all_game_index_9_parts'] = dict(
-                sorted(game_index_9_parts['all_game_index_9_parts'].items(), key=lambda item: item[1]))
+                    game_index_9_parts['all_games_index_9_parts'][part] += cost
+            game_index_9_parts['all_games_index_9_parts'] = dict(
+                sorted(game_index_9_parts['all_games_index_9_parts'].items(), key=lambda item: item[1]))
         return Response(game_index_9_parts, status=200)
