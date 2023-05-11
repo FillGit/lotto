@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from lotto_app.app.models import Game
 from lotto_app.app.parsers.choise_parsers import ChoiseParsers
 from lotto_app.app.serializers import GameSerializer
-from lotto_app.app.utils import get_game_info, index_9_parts, index_bingo
+from lotto_app.app.utils import get_9_parts_numbers, get_game_info, index_9_parts, index_bingo
 from lotto_app.app.views.value_previous_games import ValuePreviousGamesViewSet
 from lotto_app.config import get_amount_games, get_factor_games
 
@@ -55,6 +55,7 @@ class GameViewSet(viewsets.ModelViewSet):
             'min_cost': str_total_cost_numbers[0],
             'max_cost': str_total_cost_numbers[89],
             'total_cost_numbers': total_cost_numbers,
+            '9_parts_numbers': get_9_parts_numbers(total_cost_numbers)
         }
 
     @staticmethod

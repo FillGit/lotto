@@ -161,7 +161,7 @@ class GetSeveralGamesInfoTest(TestCase):
         return {
             'min_cost': {88: 0},
             'max_cost': {1: 540},
-            'total_cost_numbers': total_cost_numbers
+            'total_cost_numbers': total_cost_numbers,
         }
 
     def test_validate_not_enough_games(self):
@@ -180,7 +180,7 @@ class GetSeveralGamesInfoTest(TestCase):
         GameFactory(amount_games=1)
         assert_that(Game.objects.count(), is_(3))
         assert_that(list(GameViewSet.get_several_games_info('test_lotto1', 3).keys()),
-                    is_(['min_cost', 'max_cost', 'total_cost_numbers']))
+                    is_(['min_cost', 'max_cost', 'total_cost_numbers', '9_parts_numbers']))
 
     def test_happy_path_get_several_games_info(self):
         GameFactory(amount_games=3, in_order_numbers=True)
@@ -190,6 +190,16 @@ class GetSeveralGamesInfoTest(TestCase):
         assert_that(info['min_cost'], is_(expected_resp['min_cost']))
         assert_that(info['max_cost'], is_(expected_resp['max_cost']))
         assert_that(info['total_cost_numbers'], is_(expected_resp['total_cost_numbers']))
+        assert_that(info['9_parts_numbers'],
+                    is_({0: [88, 89, 90, 87, 86, 85, 84, 83, 82, 81],
+                         1: [80, 79, 78, 77, 76, 75, 74, 73, 72, 71],
+                         2: [70, 69, 68, 67, 66, 65, 64, 63, 62, 61],
+                         3: [60, 59, 58, 57, 56, 55, 54, 53, 52, 51],
+                         4: [50, 49, 48, 47, 46, 45, 44, 43, 42, 41],
+                         5: [40, 39, 38, 37, 36, 35, 34, 33, 32, 31],
+                         6: [30, 29, 28, 27, 26, 25, 24, 23, 22, 21],
+                         7: [20, 19, 18, 17, 16, 15, 14, 13, 12, 11],
+                         8: [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]}))
 
     def test_happy_path_without_field_last_wins(self):
         GameFactory(amount_games=2, in_order_numbers=True)
