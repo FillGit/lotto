@@ -84,6 +84,13 @@ def index_9_parts(cost_numbers, bingo):
     return dict((x, y) for x, y in sorted(sum_9_parts.items(), key=lambda x: x[0]))
 
 
+def get_9_parts_numbers(sorted_cost_numbers):
+    _9_parts_numbers = {}
+    for i in range(0, 9):
+        _9_parts_numbers[i] = list(sorted_cost_numbers.keys())[i*10: i*10+10]
+    return _9_parts_numbers
+
+
 def get_game_info(game_obj, mult=None):
     if not mult:
         mult = 1
