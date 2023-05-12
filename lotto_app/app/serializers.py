@@ -72,9 +72,8 @@ class StateNumberSerializer(serializers.ModelSerializer):
 
 
 class LottoTicketsSerializer(serializers.ModelSerializer):
-    game_id = serializers.CharField(source='game_obj.game_id', read_only=True, allow_null=True)
 
     class Meta:
         model = LottoTickets
-        fields = ['game_id', 'ticket_id', 'first_seven_numbers',
+        fields = ['name_game', 'game_id', 'ticket_id', 'first_seven_numbers',
                   'ticket_numbers', 'taken_ticket']
