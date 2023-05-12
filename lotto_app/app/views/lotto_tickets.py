@@ -3,9 +3,8 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from lotto_app.app.models import Game, LottoTickets
+from lotto_app.app.models import LottoTickets
 from lotto_app.app.serializers import LottoTicketsSerializer
-from lotto_app.app.utils import get_str_numbers
 from lotto_app.config import get_from_config, get_section_from_config
 from lotto_app.constants import QUANTITY_TICKETS
 
@@ -26,10 +25,11 @@ class LottoTicketsViewSet(viewsets.ModelViewSet):
         return LottoTickets.objects.get(game_id=self.kwargs['pk'])
 
     def create(self, request, *args, **kwargs):
-        game_obj = Game.objects.get(game=request.data['game_id'])
+        name_game = self.kwargs['ng']
+        game_id = request.data['game_id']
         lotto_tickets = []
         tickets_from_remote_server = {}
-        _ticket_ids = [ticket_obj.ticket_id for ticket_obj in self.lotto_tickets_by_game_objs(request.data['game_id'])]
+        _ticket_ids = [ticket_obj.ticket_id for ticket_obj in self.lotto_tickets_by_game_objs(game_id)]
 
         for i in range(1, QUANTITY_TICKETS):
             for ticket_id, val in self._get_tickets_from_json(self.LOTTO_URL, self.LOTTO_HEADERS).items():
@@ -38,21 +38,26 @@ class LottoTicketsViewSet(viewsets.ModelViewSet):
                 _ticket_ids.append(ticket_id)
 
         for ticket, v in tickets_from_remote_server.items():
-            lotto_tickets.append(LottoTickets(game_obj=game_obj,
+
+            lotto_tickets.append(LottoTickets(name_game=name_game,
+                                              game_id=game_id,
                                               ticket_id=ticket,
-                                              first_seven_numbers=get_str_numbers(v['numbers'][0:7]),
-                                              ticket_numbers=get_str_numbers(v['numbers'])))
+                                              first_seven_numbers=v['numbers'][0:7],
+                                              ticket_numbers=v['numbers']))
         try:
             LottoTickets.objects.bulk_create(lotto_tickets)
         except Exception as err:
             return Response(str(err), status=status.HTTP_400_BAD_REQUEST)
         return Response([], status=status.HTTP_201_CREATED)
 
-    def lotto_tickets_by_game_objs(self, game_id):
-        return LottoTickets.objects.filter(game_obj__game_id=game_id)
+    def lotto_tickets_by_game_objs(self, game_id=None):
+        name_game = self.kwargs['ng']
+        if not game_id:
+            game_id = self.kwargs['pk']
+        return LottoTickets.objects.filter(name_game=name_game, game_id=game_id)
 
     def destroy(self, request, *args, **kwargs):
-        self.lotto_tickets_by_game_objs(kwargs['pk']).delete()
+        self.lotto_tickets_by_game_objs().delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, url_path='tickets_from_server', methods=['get'])
@@ -62,5 +67,4 @@ class LottoTicketsViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, url_path='count', methods=['get'])
     def count(self, request, **kwargs):
-        game = kwargs['pk']
-        return Response(LottoTickets.objects.filter(game_obj__game=game).count(), status=200)
+        return Response(self.lotto_tickets_by_game_objs().count(), status=200)

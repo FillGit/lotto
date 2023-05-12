@@ -9,7 +9,7 @@ from django.db import models
 
 class Game(models.Model):
     name_game = models.CharField(max_length=25, blank=False)
-    game_id = models.CharField(max_length=20, blank=False, unique=True)
+    game_id = models.CharField(max_length=20, blank=False)
     numbers = ArrayField(
         models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(90)]),
         size=90)
@@ -26,6 +26,11 @@ class Game(models.Model):
     add_numbers = ArrayField(
         models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(89)]),
         size=89, blank=True, null=True)
+
+    constraints = [
+        models.UniqueConstraint(fields=['name_game', 'game_id'],
+                                name='not unique name_game and game_id')
+    ]
 
     def __str__(self):
         """
@@ -135,34 +140,36 @@ class PurchasedTickets(models.Model):
 
 
 class StateNumbers(models.Model):
-    game_obj = models.ForeignKey(Game, on_delete=models.CASCADE)
+    name_game = models.CharField(max_length=25, blank=False)
+    game_id = models.CharField(max_length=20, blank=False)
 
     number = models.IntegerField()
     state = models.CharField(max_length=20)
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['game_obj', 'number'], name='not unique game and number')
+            models.UniqueConstraint(fields=['name_game', 'game_id'],
+                                    name='not unique name_game and game_id')
         ]
 
 
 class LottoTickets(models.Model):
-    game_obj = models.ForeignKey(Game, on_delete=models.CASCADE)
+    name_game = models.CharField(max_length=25, blank=False)
+    game_id = models.CharField(max_length=20, blank=False)
+
     ticket_id = models.CharField(max_length=20)
-    first_seven_numbers = models.CharField(max_length=20)
-    ticket_numbers = models.CharField(max_length=500)
+    first_seven_numbers = ArrayField(
+        models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(90)]),
+        size=7)
+    ticket_numbers = ArrayField(
+        models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(90)]),
+        size=30)
     taken_ticket = models.BooleanField(default=False)
 
     constraints = [
-        models.UniqueConstraint(fields=['game_obj', 'ticket_number'],
-                                name='not unique game and ticket_number')
+        models.UniqueConstraint(fields=['name_game', 'game_id', 'ticket_number'],
+                                name='not unique name_game and game_id and ticket_number')
     ]
-
-    def get_ticket_numbers(self) -> list:
-        return [int(num) for num in self.ticket_numbers.split(' ') if num]
-
-    def get_first_seven_numbers(self) -> list:
-        return [int(num) for num in self.first_seven_numbers.split(' ') if num]
 
     @staticmethod
     def get_tickets_plus(dict_tickets):
