@@ -68,3 +68,9 @@ class LottoTicketsViewSet(viewsets.ModelViewSet):
     @action(detail=True, url_path='count', methods=['get'])
     def count(self, request, **kwargs):
         return Response(self.lotto_tickets_by_game_objs().count(), status=200)
+
+    @action(detail=True, url_path='ticket', methods=['get'])
+    def ticket(self, request, **kwargs):
+        ticket_obj = self.lotto_tickets_by_game_objs().get(ticket_id=request.query_params.get('ticket_id'))
+        serializer = self.get_serializer(ticket_obj)
+        return Response(serializer.data)
