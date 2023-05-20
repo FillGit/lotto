@@ -64,11 +64,10 @@ class GameSerializer(serializers.ModelSerializer):
 
 
 class StateNumberSerializer(serializers.ModelSerializer):
-    game = serializers.CharField(source='game_obj.game', read_only=True, allow_null=True)
 
     class Meta:
         model = StateNumbers
-        fields = ['number', 'state', 'game']
+        fields = ['name_game', 'number', 'game_id', 'amount_used']
 
 
 class LottoTicketsSerializer(serializers.ModelSerializer):

@@ -3,3 +3,4 @@ max_line_length = 122
 exclude =
     env
     venv
+    example_codes
