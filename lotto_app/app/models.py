@@ -144,12 +144,12 @@ class StateNumbers(models.Model):
     game_id = models.CharField(max_length=20, blank=False)
 
     number = models.IntegerField()
-    state = models.CharField(max_length=20)
+    amount_used = models.IntegerField(default=0)
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['name_game', 'game_id'],
-                                    name='not unique name_game and game_id')
+            models.UniqueConstraint(fields=['name_game', 'game_id', 'number'],
+                                    name='not unique name_game and game_id and number')
         ]
 
 
