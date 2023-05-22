@@ -107,6 +107,25 @@ class ComparisonPartsWinTicketTest(WebTest):
                                          [8, 10, 11, 12, 13], [10, 11, 12, 13, 14],
                                          [11, 12, 13, 14, 16], [12, 13, 14, 16, 17]]))
 
+    def test_comparison_parts_win_ticket(self):
+        [GameFactory(fields_games=get_fields_games(numbers_3, 1)),
+         GameFactory(fields_games=get_fields_games(numbers_2, 2)),
+         GameFactory(fields_games=get_fields_games(numbers_1, 3))]
+        params = {'how_comparison_games': 4,
+                  'part_consists_of': 5,
+                  'order_row': 8,
+                  }
+
+        resp = self.app.get(self._get_endpoint(3), params=params)
+
+        assert_that(list(resp.json.keys()), is_(['main_game', '2', '1']))
+        assert_that(resp.json['main_game'], is_('3'))
+        assert_that(resp.json['2'], is_([[62, 63, 64, 66, 67], [63, 64, 66, 67, 68], [64, 66, 67, 68, 70],
+                                         [77, 78, 79, 80, 81]]))
+        assert_that(resp.json['1'], is_([[6, 7, 8, 10, 11], [7, 8, 10, 11, 12],
+                                         [8, 10, 11, 12, 13], [10, 11, 12, 13, 14],
+                                         [11, 12, 13, 14, 16], [12, 13, 14, 16, 17]]))
+
 
 class Games9PartsIntoWinTicketTest(WebTest):
 
