@@ -5,9 +5,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from lotto_app.app.models import Game, LottoTickets
-from lotto_app.app.utils import get_game_info, index_9_parts
+from lotto_app.app.utils import get_game_info, index_9_parts, shuffle_numbers
 from lotto_app.app.views.games import GameViewSet
-from random import shuffle
 
 
 class ResearchViewSet(viewsets.ModelViewSet):
@@ -199,6 +198,12 @@ class ResearchViewSet(viewsets.ModelViewSet):
         set_numbers_by_parts.update(add_numbers)
         return set_numbers_by_parts
 
+    def _get_count_combination(self, comparison_parts_win_ticket):
+        count_combination = 0
+        for game_id, parts in comparison_parts_win_ticket.items():
+            count_combination += len(parts)
+        return count_combination
+
     @action(detail=True, url_path='future_combination_win_ticket', methods=['get'])
     def future_combination_win_ticket(self, request, ng, pk=None):
         how_comparison_games = int(request.query_params.get('how_comparison_games', 10))
@@ -216,15 +221,14 @@ class ResearchViewSet(viewsets.ModelViewSet):
         set_numbers_by_parts = self.get_set_numbers_by_parts(ng, int(pk)-1,
                                                              parts_by_used, add_numbers)
 
+        comparison_parts_win_ticket = {}
         _win_ticket = {}
-        _comparison_parts_win_ticket = {}
-        count_combination = {}
+        _count_combination = {}
+        _l = 61 - len(set_numbers_by_parts)
         for i in range(1000):
-            minus_numbers = [mn for mn in range(1, 91) if mn not in set_numbers_by_parts]
-            shuffle(minus_numbers)
-            _win_ticket[i] = set(minus_numbers[0:(61-len(set_numbers_by_parts))]) | set_numbers_by_parts
+            _win_ticket[i] = set(shuffle_numbers(set_numbers_by_parts)[0:_l]) | set_numbers_by_parts
 
-            _comparison_parts_win_ticket[i] = self.get_comparison_parts_win_ticket(
+            comparison_parts_win_ticket[i] = self.get_comparison_parts_win_ticket(
                 part_consists_of, order_row,
                 comparison_games_objs,
                 main_game_obj=None,
@@ -233,15 +237,13 @@ class ResearchViewSet(viewsets.ModelViewSet):
                 main_numbers_in_row=Game.get_numbers_in_row(order_row, _win_ticket[i])
             )
 
-            count_combination[i] = 0
-            for game_id, parts in _comparison_parts_win_ticket[i].items():
-                count_combination[i] += len(parts)
+            _count_combination[i] = self._get_count_combination(comparison_parts_win_ticket[i])
 
-            if not count_combination[i]:
+            if not _count_combination[i]:
                 break
 
-        k = [i for i, count in count_combination.items() if count == min(count_combination.values())]
+        k = [i for i, count in _count_combination.items() if count == min(_count_combination.values())]
         resp = {'main_game': pk}
-        resp['combination_win_ticket'] = _win_ticket[k[0]]
-        resp.update(_comparison_parts_win_ticket[k[0]])
+        resp['future_combination_win_ticket'] = _win_ticket[k[0]]
+        resp.update(comparison_parts_win_ticket[k[0]])
         return Response(resp, status=200)
