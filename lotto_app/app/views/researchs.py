@@ -245,5 +245,6 @@ class ResearchViewSet(viewsets.ModelViewSet):
         k = [i for i, count in _count_combination.items() if count == min(_count_combination.values())]
         resp = {'main_game': pk}
         resp['future_combination_win_ticket'] = _win_ticket[k[0]]
+        resp['set_numbers_by_parts'] = set_numbers_by_parts
         resp.update(comparison_parts_win_ticket[k[0]])
         return Response(resp, status=200)
