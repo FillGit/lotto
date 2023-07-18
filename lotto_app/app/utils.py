@@ -1,3 +1,6 @@
+from random import shuffle
+
+
 def get_cost_numbers(numbers, mult):
     high_cost = 90
     cost_numbers = {}
@@ -104,3 +107,12 @@ def get_game_info(game_obj, mult=None):
 
 def get_str_numbers(list_numbers):
     return ' '.join(map(str, list_numbers))
+
+
+def shuffle_numbers(set_exist_numbers=None, numbers_in_lotto=90):
+    if set_exist_numbers:
+        minus_numbers = [mn for mn in range(1, numbers_in_lotto+1) if mn not in set_exist_numbers]
+    else:
+        minus_numbers = [mn for mn in range(1, numbers_in_lotto+1)]
+    shuffle(minus_numbers)
+    return minus_numbers

@@ -5,7 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from lotto_app.app.models import Game, LottoTickets
-from lotto_app.app.utils import get_game_info, index_9_parts
+from lotto_app.app.utils import get_game_info, index_9_parts, shuffle_numbers
 from lotto_app.app.views.games import GameViewSet
 
 
@@ -44,23 +44,18 @@ class ResearchViewSet(viewsets.ModelViewSet):
         resp.update(dict(sorted(dict_common_numbers.items(), key=lambda item: item[1], reverse=True)))
         return Response(resp, status=200)
 
-    @action(detail=True, url_path='comparison_parts_win_ticket', methods=['get'])
-    def comparison_parts_win_ticket(self, request, ng, pk=None):
-        main_game_obj = self.get_game_obj()
-
-        how_comparison_games = int(request.query_params.get('how_comparison_games'))
-        part_consists_of = int(request.query_params.get('part_consists_of'))
-        order_row = int(request.query_params.get('order_row'))
-
-        main_combination_win_ticket = main_game_obj.get_combination_win_ticket(part_consists_of, order_row)
-        main_numbers_in_row = []
-        for numbers in main_combination_win_ticket['numbers_in_row']:
-            main_numbers_in_row.extend(numbers)
-
-        comparison_games_objs = self.get_general_game_objs().filter(
-            game_id_int__lte=int(pk)-1,
-            game_id_int__gte=int(pk)-10-how_comparison_games
-            ).order_by('-game_id_int')[0:how_comparison_games]
+    @staticmethod
+    def get_comparison_parts_win_ticket(part_consists_of, order_row,
+                                        comparison_games_objs,
+                                        main_game_obj=None,
+                                        main_combination_win_ticket=None,
+                                        main_numbers_in_row=None
+                                        ):
+        if main_game_obj:
+            main_combination_win_ticket = main_game_obj.get_combination_win_ticket(part_consists_of, order_row)
+            main_numbers_in_row = []
+            for numbers in main_combination_win_ticket['numbers_in_row']:
+                main_numbers_in_row.extend(numbers)
 
         dict_comparisons = {_obj.game_id: [] for _obj in comparison_games_objs}
         for _obj in comparison_games_objs:
@@ -75,6 +70,23 @@ class ResearchViewSet(viewsets.ModelViewSet):
                     number for number in part if number in main_numbers_in_row
                 ]:
                     dict_comparisons[_obj.game_id].append(part)
+        return dict_comparisons
+
+    @action(detail=True, url_path='comparison_parts_win_ticket', methods=['get'])
+    def comparison_parts_win_ticket(self, request, ng, pk=None):
+        main_game_obj = self.get_game_obj()
+
+        how_comparison_games = int(request.query_params.get('how_comparison_games'))
+        part_consists_of = int(request.query_params.get('part_consists_of'))
+        order_row = int(request.query_params.get('order_row'))
+
+        comparison_games_objs = self.get_general_game_objs().filter(
+            game_id_int__lte=int(pk)-1,
+            game_id_int__gte=int(pk)-10-how_comparison_games
+        ).order_by('-game_id_int')[0:how_comparison_games]
+
+        dict_comparisons = self.get_comparison_parts_win_ticket(part_consists_of, order_row,
+                                                                comparison_games_objs, main_game_obj)
 
         resp = {'main_game': pk}
         resp.update(dict_comparisons)
@@ -108,7 +120,7 @@ class ResearchViewSet(viewsets.ModelViewSet):
         game_objs = self.get_general_game_objs().filter(
             game_id_int__lte=game_start,
             game_id_int__gte=game_start-how_games-5
-            ).order_by('-game_id_int')[0:how_games]
+        ).order_by('-game_id_int')[0:how_games]
 
         if pk not in [game_obj.game_id for game_obj in game_objs]:
             return Response({"error": f"game_id - {game_start} doesn't have in query"},
@@ -151,7 +163,7 @@ class ResearchViewSet(viewsets.ModelViewSet):
         game_objs = self.get_general_game_objs().filter(
             game_id_int__lte=game_start,
             game_id_int__gte=game_start-how_games-5
-            ).order_by('-game_id_int')[0:how_games]
+        ).order_by('-game_id_int')[0:how_games]
 
         if pk not in [game_obj.game_id for game_obj in game_objs]:
             return Response({"error": f"game_id - {game_start} doesn't have in query"},
@@ -174,3 +186,79 @@ class ResearchViewSet(viewsets.ModelViewSet):
             game_index_9_parts['all_games_index_9_parts'] = dict(
                 sorted(game_index_9_parts['all_games_index_9_parts'].items(), key=lambda item: item[1]))
         return Response(game_index_9_parts, status=200)
+
+    @staticmethod
+    def get_set_numbers_by_parts(name_game, game_id, parts_by_used, add_numbers):
+        set_numbers_by_parts = set()
+        several_games_info = GameViewSet.get_several_games_info(name_game, game_id)
+
+        for part in parts_by_used:
+            set_numbers_by_parts.update(several_games_info['9_parts_numbers'][part])
+
+        set_numbers_by_parts.update(add_numbers)
+        return set_numbers_by_parts
+
+    def _get_count_combination(self, comparison_parts_win_ticket):
+        count_combination = 0
+        for game_id, parts in comparison_parts_win_ticket.items():
+            count_combination += len(parts)
+        return count_combination
+
+    @action(detail=True, url_path='future_combination_win_ticket', methods=['get'])
+    def future_combination_win_ticket(self, request, ng, pk=None):
+        how_comparison_games = int(request.query_params.get('how_comparison_games', 10))
+        part_consists_of = int(request.query_params.get('part_consists_of', 5))
+        order_row = int(request.query_params.get('order_row', 8))
+
+        parts_by_used = [int(part) for part in request.query_params.get('parts_by_used').replace(' ', '').split(',')]
+        add_numbers = [int(num) for num in request.query_params.get('add_numbers').replace(' ', '').split(',')]
+
+        comparison_games_objs = self.get_general_game_objs().filter(
+            game_id_int__lte=int(pk)-1,
+            game_id_int__gte=int(pk)-10-how_comparison_games
+        ).order_by('-game_id_int')[0:how_comparison_games]
+
+        if not [_g for _g in comparison_games_objs if _g.game_id == str(int(pk)-1)]:
+            return Response({"error": f"query_params doesn't game_id {int(pk)-1}"},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        set_numbers_by_parts = self.get_set_numbers_by_parts(ng,
+                                                             int(pk)-1,
+                                                             parts_by_used,
+                                                             add_numbers)
+
+        set_exclude_numbers = set()
+        if 'exclude_numbers' in request.query_params:
+            set_exclude_numbers = set([
+                int(part) for part in request.query_params.get('exclude_numbers').replace(' ', '').split(',')
+                ])
+            set_numbers_by_parts = set_numbers_by_parts - set_exclude_numbers
+
+        comparison_parts_win_ticket = {}
+        _win_ticket = {}
+        _count_combination = {}
+        _l = 61 - len(set_numbers_by_parts)
+        for i in range(1000):
+            _win_ticket[i] = set(shuffle_numbers(set_numbers_by_parts | set_exclude_numbers)[0:_l]) | set_numbers_by_parts
+
+            comparison_parts_win_ticket[i] = self.get_comparison_parts_win_ticket(
+                part_consists_of, order_row,
+                comparison_games_objs,
+                main_game_obj=None,
+                main_combination_win_ticket={'parts':
+                                             Game.get_parts_numbers(part_consists_of, _win_ticket[i])},
+                main_numbers_in_row=Game.get_numbers_in_row(order_row, _win_ticket[i])
+            )
+
+            _count_combination[i] = self._get_count_combination(comparison_parts_win_ticket[i])
+
+            if not _count_combination[i]:
+                break
+
+        k = [i for i, count in _count_combination.items() if count == min(_count_combination.values())]
+        resp = {'main_game': pk}
+        resp['future_combination_win_ticket'] = _win_ticket[k[0]]
+        resp['set_numbers_by_parts'] = set_numbers_by_parts
+        resp['future_add_numbers'] = _win_ticket[k[0]] - set_numbers_by_parts
+        resp.update(comparison_parts_win_ticket[k[0]])
+        return Response(resp, status=200)

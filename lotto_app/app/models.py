@@ -95,7 +95,8 @@ class Game(models.Model):
     def get_game_numbers(self):
         return list(map(int, self.record_correction_numbers(self.numbers)))
 
-    def _get_numbers_in_row(self, order_row, combination_numbers):
+    @staticmethod
+    def get_numbers_in_row(order_row, combination_numbers):
         _row = 1
         previous_number = list(combination_numbers)[0]
         previous_numbers = [previous_number]
@@ -115,7 +116,8 @@ class Game(models.Model):
             previous_number = number
         return numbers_in_row
 
-    def _get_parts_numbers(self, part_consists_of, combination_numbers):
+    @staticmethod
+    def get_parts_numbers(part_consists_of, combination_numbers):
         parts = []
         i = 0
         for _ in combination_numbers:
@@ -128,8 +130,8 @@ class Game(models.Model):
     def get_combination_win_ticket(self, part_consists_of, order_row):
         combination_win_ticket = set(self.get_win_list(self.last_win_number_ticket))
         return {'combination_win_ticket': combination_win_ticket,
-                'parts': self._get_parts_numbers(part_consists_of, combination_win_ticket),
-                'numbers_in_row': self._get_numbers_in_row(order_row, combination_win_ticket)
+                'parts': self.get_parts_numbers(part_consists_of, combination_win_ticket),
+                'numbers_in_row': self.get_numbers_in_row(order_row, combination_win_ticket)
                 }
 
 
