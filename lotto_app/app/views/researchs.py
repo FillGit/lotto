@@ -218,15 +218,28 @@ class ResearchViewSet(viewsets.ModelViewSet):
             game_id_int__gte=int(pk)-10-how_comparison_games
         ).order_by('-game_id_int')[0:how_comparison_games]
 
-        set_numbers_by_parts = self.get_set_numbers_by_parts(ng, int(pk)-1,
-                                                             parts_by_used, add_numbers)
+        if not [_g for _g in comparison_games_objs if _g.game_id == str(int(pk)-1)]:
+            return Response({"error": f"query_params doesn't game_id {int(pk)-1}"},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        set_numbers_by_parts = self.get_set_numbers_by_parts(ng,
+                                                             int(pk)-1,
+                                                             parts_by_used,
+                                                             add_numbers)
+
+        set_exclude_numbers = set()
+        if 'exclude_numbers' in request.query_params:
+            set_exclude_numbers = set([
+                int(part) for part in request.query_params.get('exclude_numbers').replace(' ', '').split(',')
+                ])
+            set_numbers_by_parts = set_numbers_by_parts - set_exclude_numbers
 
         comparison_parts_win_ticket = {}
         _win_ticket = {}
         _count_combination = {}
         _l = 61 - len(set_numbers_by_parts)
         for i in range(1000):
-            _win_ticket[i] = set(shuffle_numbers(set_numbers_by_parts)[0:_l]) | set_numbers_by_parts
+            _win_ticket[i] = set(shuffle_numbers(set_numbers_by_parts | set_exclude_numbers)[0:_l]) | set_numbers_by_parts
 
             comparison_parts_win_ticket[i] = self.get_comparison_parts_win_ticket(
                 part_consists_of, order_row,
@@ -246,5 +259,6 @@ class ResearchViewSet(viewsets.ModelViewSet):
         resp = {'main_game': pk}
         resp['future_combination_win_ticket'] = _win_ticket[k[0]]
         resp['set_numbers_by_parts'] = set_numbers_by_parts
+        resp['future_add_numbers'] = _win_ticket[k[0]] - set_numbers_by_parts
         resp.update(comparison_parts_win_ticket[k[0]])
         return Response(resp, status=200)

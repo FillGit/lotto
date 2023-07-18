@@ -1,5 +1,5 @@
 from django_webtest import WebTest
-from hamcrest import assert_that, calling, is_, is_not, raises
+from hamcrest import assert_that, calling, has_item, has_items, is_, is_not, raises
 from webtest.app import AppError
 
 from lotto_app.app.models import Game
@@ -168,6 +168,7 @@ class FutureCombinationWinTicketTest(WebTest):
                     is_(61))
         assert_that(len(set(resp.json['future_combination_win_ticket'])),
                     is_(61))
+        assert_that(resp.json['future_combination_win_ticket'], has_items(12, 14))
         assert_that(resp.json['set_numbers_by_parts'],
                     is_([1, 2, 5, 6, 9, 10, 11, 12, 14, 15, 16, 19, 22, 23, 25, 26, 32, 33, 34,
                          36, 38, 39, 40, 43, 46, 47, 48, 51, 52, 55, 64, 69, 70, 71, 72, 73, 75,
@@ -219,3 +220,30 @@ class FutureCombinationWinTicketTest(WebTest):
                     is_(['main_game',
                          'future_combination_win_ticket',
                          'set_numbers_by_parts', '3', '2']))
+
+    def test_exclude_numbers(self):
+        GameFactory(fields_games=get_fields_games(FNs.numbers_1, 1))
+        GameFactory(fields_games=get_fields_games(FNs.numbers_1, 2))
+        GameFactory(fields_games=get_fields_games(FNs.numbers_1, 3))
+
+        params = {'parts_by_used': '2,3,6,8',
+                  'add_numbers': '12,14',
+                  'exclude_numbers': '12'}
+
+        resp = self.app.get(self._get_endpoint(4), params=params)
+
+        assert_that(len(set(resp.json['future_combination_win_ticket'])),
+                    is_(61))
+        assert_that(resp.json['future_combination_win_ticket'], has_item(14))
+        assert_that(12 in resp.json['future_combination_win_ticket'], is_(False))
+
+    def test_validate_query_params(self):
+        GameFactory(fields_games=get_fields_games(FNs.numbers_1, 1))
+        GameFactory(fields_games=get_fields_games(FNs.numbers_1, 2))
+        GameFactory(fields_games=get_fields_games(FNs.numbers_1, 3))
+
+        params = {'parts_by_used': '2,3,6,8',
+                  'add_numbers': '12,14'}
+
+        assert_that(calling(self.app.get).with_args(self._get_endpoint(5), params=params),
+                    raises(AppError))
