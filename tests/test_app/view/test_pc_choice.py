@@ -58,3 +58,31 @@ class Choice30Test(WebTest):
                                                                  37, 38, 40, 41, 47, 48, 51, 57,
                                                                  62, 63, 64, 66, 71, 76, 77, 84,
                                                                  85, 86]}]}))
+
+    def test_happy_path_ticket_factory(self):
+        Ticket30Factory(game_id=1)
+        resp = self.app.get('/test_lotto1/lotto_tickets/')
+        assert_that(len(resp.json), is_(3))
+        assert_that(list(resp.json[2].keys()),
+                    is_(['name_game', 'game_id', 'ticket_id',
+                        'first_seven_numbers', 'ticket_numbers', 'taken_ticket']))
+
+        # without "future_combination_win_ticket"
+        params = {"set_numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                  "limit": 2,
+                  "exclude_numbers": [],
+                  "future_combination_win_ticket": []
+                  }
+        resp = self.app.post_json(self._get_endpoint(1), params=params)
+        assert_that(len(resp.json['2'][0]), is_(7))
+        assert_that(len(resp.json['2'][1].keys()), is_(2))
+
+        # with "future_combination_win_ticket"
+        params = {"set_numbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                  "limit": 2,
+                  "exclude_numbers": [],
+                  "future_combination_win_ticket": [1, 2, 3, 4, 5, 6, 7, 8, 11]
+                  }
+        resp = self.app.post_json(self._get_endpoint(1), params=params)
+        assert_that(len(resp.json['2'][0]), is_(7))
+        assert_that(len(resp.json['2'][1].keys()), is_(3))
