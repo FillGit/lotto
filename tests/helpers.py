@@ -1,6 +1,6 @@
 from random import shuffle
 
-from lotto_app.app.models import Game
+from lotto_app.app.models import Game, LottoTickets
 
 """
 Default win_card and win_ticket of the GameFactory class:
@@ -121,7 +121,65 @@ class GameFactory():
         }
 
 
-class FakeNumbers:
+class Ticket30Factory():
+
+    def __init__(self, name_game='test_lotto1', game_id=None, amount_tickets=3, ticket_ids=[],
+                 fields_tickets=None, only_games_json=False):
+
+        self.game_id = game_id
+        self.name_game = name_game
+        self.amount_tickets = amount_tickets
+        self.ticket_ids = ticket_ids
+        self.numbers_in_ticket = 30
+        self.fields_tickets = fields_tickets
+        self.only_games_json = only_games_json
+
+        if fields_tickets:
+            self.set_tickets_db()
+        elif only_games_json is False:
+            self.fields_tickets = self.get_fields_tickets()
+            self.set_tickets_db()
+        elif only_games_json:
+            self.fields_tickets = self.get_fields_tickets()
+
+    def set_tickets_db(self):
+        return LottoTickets.objects.bulk_create([LottoTickets(**fields) for fields in self.fields_tickets])
+
+    def get_fields_tickets(self):
+        if not self.ticket_ids:
+            ticket_objs = LottoTickets.objects.filter(name_game=self.name_game,
+                                                      game_id=self.game_id).all()
+            start = 1 if not ticket_objs else int(ticket_objs.last().ticket_id)+1
+            _ticket_ids = [_id for _id in range(start, start+self.amount_tickets)]
+            return [self.get_fields(_id) for _id in _ticket_ids]
+
+        return [self.get_fields(_id) for _id in self.ticket_ids]
+
+    def _get_ticket_numbers(self):
+        amount_i = [3, 2, 3, 3, 3, 4, 4, 4, 4]
+        shuffle(amount_i)
+        _numbers = []
+        for i in range(0, 9):
+            _n = list(range(1 + i*10, i*10 + 11))
+            shuffle(_n)
+            _numbers.extend(_n[0:amount_i[i]])
+        shuffle(_numbers)
+        return _numbers
+
+    def get_fields(self, ticket_id):
+        list_numbers = list(range(1, 90+1))
+        shuffle(list_numbers)
+        ticket_numbers = self._get_ticket_numbers()
+        return {
+            'name_game': self.name_game,
+            'game_id': self.game_id,
+            'ticket_id': ticket_id,
+            'ticket_numbers': ticket_numbers,
+            'first_seven_numbers': ticket_numbers[0:7]
+            }
+
+
+class Fake87Numbers:
     numbers_1 = [61, 55, 7, 59, 63, 13, 49, 10, 48, 8, 22, 76, 39, 47, 75, 31, 23, 33, 87,
                  77, 20, 44, 53, 43, 6, 18, 80, 58, 28, 62, 16, 78, 84, 21, 67, 89, 90, 36,
                  79, 56, 54, 68, 46, 66, 12, 51, 72, 14, 50, 42, 17, 37, 38, 11, 64, 32, 1,
@@ -151,3 +209,20 @@ class FakeNumbers:
                  83, 55, 17, 26, 21, 13, 72, 7, 70, 48, 19, 16, 42, 51, 33, 84, 52, 5, 20,
                  4, 90, 64, 75, 53, 40, 3, 62, 58, 41, 2, 25, 39, 10, 34, 63, 43, 60, 81, 35,
                  71, 66, 30, 11, 82, 68, 22, 85, 9, 45]
+
+
+class Fake30Numbers:
+    numbers_1 = [55, 21, 1, 23, 71, 14, 70, 37, 32, 66, 42, 25, 19, 13, 85, 74, 69, 36, 84, 61, 54,
+                 47, 35, 45, 2, 46, 72, 9, 60, 16]
+
+    numbers_2 = [73, 9, 14, 27, 78, 39, 60, 22, 42, 72, 61, 50, 55, 87, 57, 6, 35, 4, 25, 15, 82, 59,
+                 11, 67, 43, 77, 68, 62, 24, 84]
+
+    numbers_3 = [60, 49, 87, 77, 73, 22, 89, 35, 18, 68, 83, 1, 3, 4, 12, 19, 25, 45, 50, 24, 52, 62,
+                 38, 82, 28, 61, 13, 34, 54, 58]
+
+    numbers_4 = [49, 23, 67, 81, 27, 34, 89, 31, 53, 8, 75, 4, 69, 66, 26, 85, 9, 13, 82, 73, 59, 74,
+                 17, 65, 80, 43, 5, 46, 33, 19]
+
+    numbers_5 = [64, 19, 57, 84, 2, 48, 11, 12, 7, 38, 85, 86, 63, 1, 41, 66, 37, 77, 40, 26, 62, 27,
+                 20, 35, 71, 28, 47, 8, 51, 76]
