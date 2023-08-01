@@ -149,6 +149,9 @@ class ResearchViewSet(viewsets.ModelViewSet):
                 sorted(dict_no_numbers['all_no_numbers_9_parts'].items(), key=lambda item: item[1]))
         return Response(dict_no_numbers, status=200)
 
+    def _parts_with_the_most_numbers(self, parts):
+        return [part for part, val in parts.items() if val > 7]
+
     @action(detail=True, url_path='games_9_parts_into_win_ticket', methods=['get'])
     def games_9_parts_into_win_ticket(self, request, ng, pk):
         game_start = int(pk)
@@ -172,19 +175,19 @@ class ResearchViewSet(viewsets.ModelViewSet):
         game_index_9_parts = {}
         for game_obj in game_objs:
             game_id = int(game_obj.game_id)
-            last_total_cost_numbers = GameViewSet.get_several_games_info(ng, game_id-1)['total_cost_numbers']
-            list_win_ticket = game_obj.get_win_list(game_obj.last_win_number_ticket)
-            game_index_9_parts[game_id] = index_9_parts(last_total_cost_numbers, list_win_ticket)
+            _index_9_parts = index_9_parts(GameViewSet.get_several_games_info(ng, game_id-1)['total_cost_numbers'],
+                                           game_obj.get_win_list(game_obj.last_win_number_ticket))
+            game_index_9_parts[game_id] = [_index_9_parts, self._parts_with_the_most_numbers(_index_9_parts)]
 
-        game_index_9_parts['all_games_index_9_parts'] = {}
+        all_games_index_9_parts = {}
         for _game, _index_9_parts in game_index_9_parts.items():
-            for part, cost in _index_9_parts.items():
-                if part not in game_index_9_parts['all_games_index_9_parts']:
-                    game_index_9_parts['all_games_index_9_parts'][part] = cost
+            for part, cost in _index_9_parts[0].items():
+                if part not in all_games_index_9_parts:
+                    all_games_index_9_parts[part] = cost
                 else:
-                    game_index_9_parts['all_games_index_9_parts'][part] += cost
-            game_index_9_parts['all_games_index_9_parts'] = dict(
-                sorted(game_index_9_parts['all_games_index_9_parts'].items(), key=lambda item: item[1]))
+                    all_games_index_9_parts[part] += cost
+        all_games_index_9_parts = dict(sorted(all_games_index_9_parts.items(), key=lambda item: item[1]))
+        game_index_9_parts['all_games_index_9_parts'] = all_games_index_9_parts
         return Response(game_index_9_parts, status=200)
 
     @staticmethod
@@ -231,7 +234,7 @@ class ResearchViewSet(viewsets.ModelViewSet):
         if 'exclude_numbers' in request.query_params:
             set_exclude_numbers = set([
                 int(part) for part in request.query_params.get('exclude_numbers').replace(' ', '').split(',')
-                ])
+            ])
             set_numbers_by_parts = set_numbers_by_parts - set_exclude_numbers
 
         comparison_parts_win_ticket = {}
