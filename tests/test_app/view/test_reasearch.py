@@ -169,6 +169,10 @@ class FutureCombinationWinTicketTest(WebTest):
                     is_([1, 2, 5, 6, 9, 10, 11, 12, 14, 15, 16, 19, 22, 23, 25, 26, 32, 33, 34,
                          36, 38, 39, 40, 43, 46, 47, 48, 51, 52, 55, 64, 69, 70, 71, 72, 73, 75,
                          78, 79, 80, 82]))
+        set_future_combination_win_ticket = set(resp.json['future_combination_win_ticket'])
+        set_numbers_by_parts = set(resp.json['set_numbers_by_parts'])
+        assert_that(resp.json['future_add_numbers'],
+                    is_(list(set_future_combination_win_ticket - set_numbers_by_parts)))
         assert_that(resp.json['1'], is_([]))
         assert_that(resp.json['2'], is_([]))
         assert_that(resp.json['3'], is_([]))
