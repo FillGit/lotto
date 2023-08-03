@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from django.db.models import IntegerField
 from django.db.models.functions import Cast
 from rest_framework import status, viewsets
@@ -152,10 +154,40 @@ class ResearchViewSet(viewsets.ModelViewSet):
     def _parts_with_the_most_numbers(self, parts):
         return [part for part, val in parts.items() if val > 7]
 
+    def _all_repeat_parts(self, games_index_9_parts):
+        three_and_higher = []
+        for _game, _index_9_parts in games_index_9_parts.items():
+            if len(_index_9_parts[1]) > 3:
+                three_and_higher.append(_index_9_parts[1])
+        duplicates = []
+        for _l in three_and_higher:
+            if _l not in duplicates and len([_m for _m in three_and_higher if set(_l).issubset(set(_m))]) > 1:
+                duplicates.append(_l)
+        return duplicates
+
+    def _add_cost(self, cost, only_most_numbers):
+        if only_most_numbers and cost > 7:
+            return cost
+        elif only_most_numbers and cost <= 7:
+            return 0
+        else:
+            return cost
+
+    def _get_sum_games_index_9_parts(self, games_index_9_parts, only_most_numbers=None):
+        sum_games_index_9_parts = {}
+        for _game, _index_9_parts in games_index_9_parts.items():
+            for part, cost in _index_9_parts[0].items():
+                if part not in sum_games_index_9_parts:
+                    sum_games_index_9_parts[part] = self._add_cost(cost, only_most_numbers)
+                else:
+                    sum_games_index_9_parts[part] += self._add_cost(cost, only_most_numbers)
+        return dict(sorted(sum_games_index_9_parts.items(), key=lambda item: item[1]))
+
     @action(detail=True, url_path='games_9_parts_into_win_ticket', methods=['get'])
     def games_9_parts_into_win_ticket(self, request, ng, pk):
         game_start = int(pk)
         how_games = int(request.query_params.get('how_games', 0))
+        only_most_numbers = int(request.query_params.get('only_most_numbers', 0))
         if not game_start:
             return Response({"error": "query_params doesn't game_start"},
                             status=status.HTTP_400_BAD_REQUEST)
@@ -172,23 +204,19 @@ class ResearchViewSet(viewsets.ModelViewSet):
             return Response({"error": f"game_id - {game_start} doesn't have in query"},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        game_index_9_parts = {}
+        games_index_9_parts = {}
         for game_obj in game_objs:
             game_id = int(game_obj.game_id)
             _index_9_parts = index_9_parts(GameViewSet.get_several_games_info(ng, game_id-1)['total_cost_numbers'],
                                            game_obj.get_win_list(game_obj.last_win_number_ticket))
-            game_index_9_parts[game_id] = [_index_9_parts, self._parts_with_the_most_numbers(_index_9_parts)]
+            games_index_9_parts[game_id] = [_index_9_parts, self._parts_with_the_most_numbers(_index_9_parts)]
 
-        all_games_index_9_parts = {}
-        for _game, _index_9_parts in game_index_9_parts.items():
-            for part, cost in _index_9_parts[0].items():
-                if part not in all_games_index_9_parts:
-                    all_games_index_9_parts[part] = cost
-                else:
-                    all_games_index_9_parts[part] += cost
-        all_games_index_9_parts = dict(sorted(all_games_index_9_parts.items(), key=lambda item: item[1]))
-        game_index_9_parts['all_games_index_9_parts'] = all_games_index_9_parts
-        return Response(game_index_9_parts, status=200)
+        copy_games_index_9_parts = deepcopy(games_index_9_parts)
+        games_index_9_parts['sum_games_index_9_parts'] = self._get_sum_games_index_9_parts(copy_games_index_9_parts,
+                                                                                           only_most_numbers)
+        games_index_9_parts['all_repeat_parts'] = self._all_repeat_parts(copy_games_index_9_parts)
+        return Response(games_index_9_parts,
+                        status=200)
 
     @staticmethod
     def get_set_numbers_by_parts(name_game, game_id, parts_by_used, add_numbers):
