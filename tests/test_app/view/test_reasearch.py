@@ -126,16 +126,43 @@ class Games9PartsIntoWinTicketTest(WebTest):
 
         resp = self.app.get(self._get_endpoint(5), params=params)
 
-        assert_that(list(resp.json.keys()), is_(['5', '4', 'all_games_index_9_parts']))
-        assert_that(resp.json['all_games_index_9_parts'],
-                    is_({'0': 20, '1': 24, '2': 24, '3': 26, '4': 28, '5': 28, '6': 30, '8': 32,
-                         '7': 32}))
-        assert_that(resp.json['4'], is_({'0': 2, '1': 5, '2': 4, '3': 7, '4': 9, '5': 7, '6': 8,
-                                         '7': 8, '8': 10}))
-        assert_that(sum(resp.json['4'].values()), is_(60))
-        assert_that(resp.json['5'], is_({'0': 8, '1': 7, '2': 8, '3': 6, '4': 5, '5': 7, '6': 7,
-                                         '7': 8, '8': 6}))
-        assert_that(sum(resp.json['5'].values()), is_(62))
+        assert_that(list(resp.json.keys()), is_(['5',
+                                                 '4',
+                                                 'sum_games_index_9_parts',
+                                                 'all_repeat_parts']))
+        assert_that(resp.json['sum_games_index_9_parts'],
+                    is_({'0': 10, '1': 12, '2': 12, '3': 13, '4': 14, '5': 14, '6': 15, '7': 16, '8': 16}))
+        assert_that(resp.json['all_repeat_parts'], is_([]))
+        assert_that(resp.json['4'], is_([{'0': 2, '1': 5, '2': 4, '3': 7, '4': 9, '5': 7, '6': 8,
+                                         '7': 8, '8': 10},
+                                         [4, 6, 7, 8]]))
+        assert_that(sum(resp.json['4'][0].values()), is_(60))
+        assert_that(resp.json['5'], is_([{'0': 8, '1': 7, '2': 8, '3': 6, '4': 5, '5': 7, '6': 7,
+                                         '7': 8, '8': 6},
+                                         [0, 2, 7]]))
+        assert_that(sum(resp.json['5'][0].values()), is_(62))
+
+    def test_happy_path_with_only_most_numbers(self):
+        # Also we are checking resp.json['all_repeat_parts'],
+        # so we chose these F87Ns.numbers:
+        GameFactory(fields_games=get_fields_games(F87Ns.numbers_5, 1))
+        GameFactory(fields_games=get_fields_games(F87Ns.numbers_2, 2))
+        GameFactory(fields_games=get_fields_games(F87Ns.numbers_3, 3))
+        GameFactory(fields_games=get_fields_games(F87Ns.numbers_5, 4))
+        GameFactory(fields_games=get_fields_games(F87Ns.numbers_5, 5))
+
+        params = {'how_games': 2,
+                  'only_most_numbers': 1}
+
+        resp = self.app.get(self._get_endpoint(5), params=params)
+
+        assert_that(list(resp.json.keys()), is_(['5',
+                                                 '4',
+                                                 'sum_games_index_9_parts',
+                                                 'all_repeat_parts']))
+        assert_that(resp.json['sum_games_index_9_parts'],
+                    is_({'0': 0, '1': 0, '2': 0, '3': 0, '4': 9, '5': 17, '6': 18, '8': 18, '7': 19}))
+        assert_that(resp.json['all_repeat_parts'], is_([[5, 6, 7, 8]]))
 
 
 class FutureCombinationWinTicketTest(WebTest):
