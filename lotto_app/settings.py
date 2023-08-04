@@ -143,3 +143,24 @@ CONFIG = configparser.RawConfigParser()
 # preserve case on keys
 CONFIG.optionxform = str
 CONFIG.read(os.environ['LOTTO_CONFIG_PATH'])
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = os.environ.get(
+    'EMAIL_HOST', str(CONFIG.get('send_email', 'email_host')))
+EMAIL_PORT = os.environ.get(
+    'EMAIL_PORT', int(CONFIG.get('send_email', 'email_port')))
+
+EMAIL_USE_TLS = os.environ.get(
+    'EMAIL_USE_TLS', CONFIG.getboolean('send_email', 'email_use_tls'))
+
+EMAIL_USE_SSL = os.environ.get(
+    'EMAIL_USE_SSL', CONFIG.getboolean('send_email', 'email_use_ssl'))
+
+EMAIL_HOST_USER = os.environ.get(
+    'EMAIL_HOST_USER', CONFIG.get('send_email', 'email_host_user'))
+EMAIL_HOST_PASSWORD = os.environ.get(
+    'EMAIL_HOST_PASSWORD', CONFIG.get('send_email', 'email_host_password'))
+
+EMAIL_SERVER = EMAIL_HOST_USER
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+EMAIL_ADMIN = EMAIL_HOST_USER
