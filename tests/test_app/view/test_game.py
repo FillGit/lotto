@@ -4,15 +4,15 @@ from hamcrest import assert_that, calling, has_length, is_, raises
 
 from lotto_app.app.models import Game
 from lotto_app.app.views.games import GameViewSet
-from tests.helpers import GameFactory
+from tests.helpers import GameFactory8AddNumbers, GameFactory90
 
 
-class GameTestApiCase(WebTest):
+class Game90TestApiCase(WebTest):
     endpoint = '/test_lotto1/game/'
 
     def setUp(self):
-        super(GameTestApiCase, self).setUp()
-        self.game_factory = GameFactory()
+        super(Game90TestApiCase, self).setUp()
+        self.game_factory = GameFactory90()
 
     def test_happy_path_get_list(self):
         resp = self.app.get(self.endpoint)
@@ -28,8 +28,8 @@ class GameTestApiCase(WebTest):
         assert_that(resp.json['no_numbers'], has_length(3))
 
     def test_happy_path_post(self):
-        _factory = GameFactory(amount_games=1, numbers_in_lotto=90,
-                               no_numbers_in_lotto=4, only_games_json=True)
+        _factory = GameFactory90(amount_games=1, numbers_in_lotto=90,
+                                 no_numbers_in_lotto=4, only_games_json=True)
         params = _factory.get_game_json()
         resp = self.app.post_json(self.endpoint, params=params)
         assert_that(resp.json['game_id'], is_('4'))
@@ -43,8 +43,8 @@ class GameTestApiCase(WebTest):
                     is_(params['last_win_number_ticket']))
 
     def test_happy_path_str_numbers_post(self):
-        _factory = GameFactory(amount_games=1, numbers_in_lotto=90,
-                               no_numbers_in_lotto=4, only_games_json=True)
+        _factory = GameFactory90(amount_games=1, numbers_in_lotto=90,
+                                 no_numbers_in_lotto=4, only_games_json=True)
         params = _factory.get_game_str_numbers_json()
         resp = self.app.post_json(self.endpoint, params=params)
         assert_that(resp.json['game_id'], is_('4'))
@@ -58,8 +58,8 @@ class GameTestApiCase(WebTest):
                     is_(params['last_win_number_ticket']))
 
     def test_happy_path_post_without_win(self):
-        _factory = GameFactory(amount_games=1, numbers_in_lotto=90,
-                               no_numbers_in_lotto=4, only_games_json=True)
+        _factory = GameFactory90(amount_games=1, numbers_in_lotto=90,
+                                 no_numbers_in_lotto=4, only_games_json=True)
         _params = _factory.get_game_json()
         resp = self.app.post_json(self.endpoint,
                                   params={'name_game': 'test_lotto1',
@@ -74,8 +74,8 @@ class GameTestApiCase(WebTest):
         assert_that(resp.json['win_ticket']['last_win_number_ticket'], is_(None))
 
     def test_happy_path_post_auto_win(self):
-        _factory = GameFactory(amount_games=1, numbers_in_lotto=90,
-                               no_numbers_in_lotto=2, only_games_json=True)
+        _factory = GameFactory90(amount_games=1, numbers_in_lotto=90,
+                                 no_numbers_in_lotto=2, only_games_json=True)
         params = _factory.get_game_auto_win_json()
         dirty_numbers = [num for num in params['str_numbers'].replace(' ', ',').split(',') if num]
         last_win_number_card = int(dirty_numbers[1][-2:])
@@ -90,8 +90,8 @@ class GameTestApiCase(WebTest):
         assert_that(resp.json['win_ticket']['last_win_number_ticket'], is_(last_win_number_ticket))
 
     def test_happy_path_put(self):
-        _factory = GameFactory(amount_games=1, numbers_in_lotto=90,
-                               no_numbers_in_lotto=60, only_games_json=True)
+        _factory = GameFactory90(amount_games=1, numbers_in_lotto=90,
+                                 no_numbers_in_lotto=60, only_games_json=True)
         params = _factory.get_game_auto_win_json()
         resp_get = self.app.get(f'{self.endpoint}1/')
         resp = self.app.put_json(f'{self.endpoint}1/', params={'name_game': 'test_lotto1',
@@ -165,25 +165,25 @@ class GetSeveralGamesInfoTest(TestCase):
         }
 
     def test_validate_not_enough_games(self):
-        GameFactory(amount_games=1)
+        GameFactory90(amount_games=1)
         assert_that(
             calling(GameViewSet.get_several_games_info).with_args(
                 'test_lotto1', 1),
             raises(IndexError))
-        GameFactory(amount_games=1)
+        GameFactory90(amount_games=1)
         assert_that(
             calling(GameViewSet.get_several_games_info).with_args(
                 'test_lotto1', 2),
             raises(IndexError))
 
         # happy_path get_several_games_info
-        GameFactory(amount_games=1)
+        GameFactory90(amount_games=1)
         assert_that(Game.objects.count(), is_(3))
         assert_that(list(GameViewSet.get_several_games_info('test_lotto1', 3).keys()),
                     is_(['min_cost', 'max_cost', 'total_cost_numbers', '9_parts_numbers']))
 
     def test_happy_path_get_several_games_info(self):
-        GameFactory(amount_games=3, in_order_numbers=True)
+        GameFactory90(amount_games=3, in_order_numbers=True)
         assert_that(Game.objects.count(), is_(3))
         info = GameViewSet.get_several_games_info('test_lotto1', 3)
         expected_resp = self.expected_several_games_info()
@@ -202,16 +202,16 @@ class GetSeveralGamesInfoTest(TestCase):
                          8: [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]}))
 
     def test_happy_path_without_field_last_wins(self):
-        GameFactory(amount_games=2, in_order_numbers=True)
-        _fields_games = GameFactory(amount_games=1,
-                                    only_games_json=True).get_game_json()
-        GameFactory(fields_games=[{
+        GameFactory90(amount_games=2, in_order_numbers=True)
+        _fields_games = GameFactory90(amount_games=1,
+                                      only_games_json=True).get_game_json()
+        GameFactory90(fields_games=[{
             'name_game': _fields_games['name_game'],
             'game_id': _fields_games['game_id'],
             'numbers': _fields_games['numbers'],
             'no_numbers': _fields_games['no_numbers']
         }])
-        GameFactory(amount_games=1, in_order_numbers=True)
+        GameFactory90(amount_games=1, in_order_numbers=True)
         assert_that(Game.objects.count(), is_(4))
         info = GameViewSet.get_several_games_info('test_lotto1', 4)
         expected_resp = self.expected_several_games_info()
@@ -227,7 +227,7 @@ class FutureGame30Test(WebTest):
         super(FutureGame30Test, self).setUp()
 
     def test_happy_path_future_game_30(self):
-        GameFactory(amount_games=4, in_order_numbers=True)
+        GameFactory90(amount_games=4, in_order_numbers=True)
         params = {'good_games': 3,
                   'bad_games': 3}
         resp = self.app.get(f'{self.endpoint}4/future_game_30/', params=params)
@@ -256,7 +256,7 @@ class CombinationWinTicketTest(WebTest):
         return parts
 
     def test_happy_path_combination_win_ticket(self):
-        GameFactory(amount_games=1, in_order_numbers=True)
+        GameFactory90(amount_games=1, in_order_numbers=True)
         params = {'part_consists_of': 5,
                   'order_row': 8}
         resp = self.app.get(f'{self.endpoint}1/combination_win_ticket/', params=params)
@@ -269,3 +269,34 @@ class CombinationWinTicketTest(WebTest):
                                                 resp.json['combination_win_ticket'])))
         assert_that(resp.json['numbers_in_row'],
                     is_([[i for i in range(1, 61)]]))
+
+
+class Game8AddNumbersTestApiCase(WebTest):
+    endpoint = '/test_lotto2/game/'
+
+    def test_happy_path_get(self):
+        GameFactory8AddNumbers(amount_games=2)
+        resp = self.app.get(f'{self.endpoint}2/')
+        assert_that(resp.json['game_id'], is_('2'))
+        assert_that(resp.json['numbers'], has_length(8))
+        assert_that(resp.json['no_numbers'], is_(None))
+        assert_that(resp.json['win_card'], is_({'last_win_number_card': None, 'by_account': None}))
+        assert_that(resp.json['win_ticket'], is_({'last_win_number_ticket': None, 'by_account': None}))
+        assert_that(resp.json['add_numbers'], has_length(1))
+        assert_that(list(resp.json.keys()),
+                    is_(['name_game', 'game_id', 'numbers', 'no_numbers', 'win_card',
+                         'win_ticket', 'add_numbers']))
+
+    def test_happy_path_post(self):
+        _factory = GameFactory8AddNumbers(only_games_json=True)
+        params = _factory.get_game_json()
+        resp = self.app.post_json(self.endpoint, params=params)
+        assert_that(resp.json['game_id'], is_('1'))
+        assert_that(resp.json['numbers'], has_length(8))
+        assert_that(resp.json['no_numbers'], is_(None))
+        assert_that(resp.json['win_card'], is_({'last_win_number_card': None, 'by_account': None}))
+        assert_that(resp.json['win_ticket'], is_({'last_win_number_ticket': None, 'by_account': None}))
+        assert_that(resp.json['add_numbers'], has_length(1))
+        assert_that(list(resp.json.keys()),
+                    is_(['name_game', 'game_id', 'numbers', 'no_numbers', 'win_card',
+                         'win_ticket', 'add_numbers']))

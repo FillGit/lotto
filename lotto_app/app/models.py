@@ -39,7 +39,7 @@ class Game(models.Model):
         return f'id: {self.id}, game_id: {self.game_id}'
 
     def save(self, *args, **kwargs):
-        if not self.no_numbers:
+        if not self.no_numbers and not self.add_numbers:
             self.no_numbers = self.get_no_numbers()
         super().save(*args, **kwargs)
 
