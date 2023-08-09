@@ -19,7 +19,7 @@ def get_fields_games(numbers, game_id):
 
 
 class GamesNoNumbersTest(WebTest):
-    endpoint = '/test_lotto1/research/'
+    endpoint = '/test_lotto1/research_90/'
 
     def setUp(self):
         super(GamesNoNumbersTest, self).setUp()
@@ -66,7 +66,7 @@ class GamesNoNumbersTest(WebTest):
 class ComparisonPartsWinTicketTest(WebTest):
 
     def _get_endpoint(self, game_id):
-        return f'/test_lotto1/research/{game_id}/comparison_parts_win_ticket/'
+        return f'/test_lotto1/research_90/{game_id}/comparison_parts_win_ticket/'
 
     def test_happy_path_comparison_parts_win_ticket(self):
         game_factory = [GameFactory90(fields_games=get_fields_games(F87Ns.numbers_1, 1))]
@@ -113,7 +113,7 @@ class ComparisonPartsWinTicketTest(WebTest):
 class Games9PartsIntoWinTicketTest(WebTest):
 
     def _get_endpoint(self, game_id):
-        return f'/test_lotto1/research/{game_id}/games_9_parts_into_win_ticket/'
+        return f'/test_lotto1/research_90/{game_id}/games_9_parts_into_win_ticket/'
 
     def test_happy_path_games_9_parts_into_win_ticket(self):
         GameFactory90(fields_games=get_fields_games(F87Ns.numbers_1, 1))
@@ -168,7 +168,7 @@ class Games9PartsIntoWinTicketTest(WebTest):
 class FutureCombinationWinTicketTest(WebTest):
 
     def _get_endpoint(self, game_id):
-        return f'/test_lotto1/research/{game_id}/future_combination_win_ticket/'
+        return f'/test_lotto1/research_90/{game_id}/future_combination_win_ticket/'
 
     def test_happy_path_future_combination_win_ticket(self):
         GameFactory90(fields_games=get_fields_games(F87Ns.numbers_1, 1))

@@ -6,12 +6,12 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from lotto_app.app.models import Game, LottoTickets
+from lotto_app.app.models import Game
 from lotto_app.app.utils import get_game_info, index_9_parts, shuffle_numbers
 from lotto_app.app.views.games import GameViewSet
 
 
-class ResearchViewSet(viewsets.ModelViewSet):
+class Research90ViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Game.objects.filter(name_game=self.kwargs['ng']).order_by('game_id')
@@ -93,20 +93,6 @@ class ResearchViewSet(viewsets.ModelViewSet):
         resp = {'main_game': pk}
         resp.update(dict_comparisons)
         return Response(resp, status=200)
-
-    @action(detail=True, url_path='search_win_ticket', methods=['get'])
-    def search_win_ticket(self, request, ng, pk=None):
-        last_win_number_ticket = int(request.query_params.get('last_win_number_ticket', None))
-        main_game_obj = self.get_game_obj()
-        main_set_win_numbers = {int(num) for num in main_game_obj.get_win_list(last_win_number_ticket)}
-
-        ticket_ids = []
-        for ticket_obj in LottoTickets.objects.filter(game_obj=self.get_game_obj()):
-            ticket_set_numbers = set(ticket_obj.get_ticket_numbers())
-            set_n = len(ticket_set_numbers - main_set_win_numbers)
-            if set_n == 0:
-                ticket_ids.append(ticket_obj.ticket_id)
-        return Response(ticket_ids, status=200)
 
     @action(detail=True, url_path='games_no_numbers', methods=['get'])
     def games_no_numbers(self, request, ng, pk):
