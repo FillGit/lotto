@@ -1,4 +1,4 @@
-from random import shuffle
+from random import choice, shuffle
 
 from lotto_app.app.models import Game, LottoTickets
 
@@ -20,6 +20,39 @@ Default win_card and win_ticket of the GameFactory class:
 
 
 class GameFactory():
+    def decide_to_take_fields_games(self, fields_games, only_games_json):
+        if fields_games:
+            self.set_games_db()
+        elif only_games_json is False:
+            self.fields_games = self.get_fields_games()
+            self.set_games_db()
+        elif only_games_json:
+            self.fields_games = self.get_fields_games()
+
+    def get_fields_games(self):
+        if not self.game_ids:
+            game_objs = Game.objects.filter(name_game=self.name_game).all()
+            start = 1 if not game_objs else int(game_objs.last().game_id)+1
+            _game_ids = [_id for _id in range(start, start+self.amount_games)]
+            return [self.get_fields(_id) for _id in _game_ids]
+
+        return [self.get_fields(_id) for _id in self.game_ids]
+
+    def set_games_db(self):
+        return Game.objects.bulk_create([Game(**fields) for fields in self.fields_games])
+
+    def get_game_json(self, index=0):
+        return self.fields_games[index]
+
+    def get_add_numbers(self, size_add_numbers, max_number):
+        add_numbers = []
+        for _ in range(0, size_add_numbers):
+            list_numbers = list(range(1, max_number+1))
+            add_numbers.append(choice(list_numbers))
+        return add_numbers
+
+
+class GameFactory90(GameFactory):
 
     def __init__(self, name_game='test_lotto1', amount_games=3, game_ids=[], numbers_in_lotto=90,
                  no_numbers_in_lotto=3, fields_games=None, in_order_numbers=False, only_games_json=False):
@@ -33,13 +66,7 @@ class GameFactory():
         self.in_order_numbers = in_order_numbers
         self.only_games_json = only_games_json
 
-        if fields_games:
-            self.set_games_db()
-        elif only_games_json is False:
-            self.fields_games = self.get_fields_games()
-            self.set_games_db()
-        elif only_games_json:
-            self.fields_games = self.get_fields_games()
+        self.decide_to_take_fields_games(fields_games, only_games_json)
 
     def get_no_numbers(self, numbers, numbers_in_lotto):
         no_numbers = [num for num in
@@ -68,26 +95,11 @@ class GameFactory():
             'no_numbers': self.get_no_numbers(numbers, self.numbers_in_lotto)
         }
 
-    def get_fields_games(self):
-        if not self.game_ids:
-            game_objs = Game.objects.filter(name_game=self.name_game).all()
-            start = 1 if not game_objs else int(game_objs.last().game_id)+1
-            _game_ids = [_id for _id in range(start, start+self.amount_games)]
-            return [self.get_fields(_id) for _id in _game_ids]
-
-        return [self.get_fields(_id) for _id in self.game_ids]
-
-    def set_games_db(self):
-        return Game.objects.bulk_create([Game(**fields) for fields in self.fields_games])
-
     def _add_zero(self, number=None):
         str_number = str(number)
         if len(str_number) > 1:
             return str_number
         return f'0{str_number}'
-
-    def get_game_json(self, index=0):
-        return self.fields_games[index]
 
     def get_game_str_numbers_json(self, index=0):
         _fields_game = self.fields_games[index]
@@ -118,6 +130,33 @@ class GameFactory():
             'game_id': _fields_game['game_id'],
             'str_numbers': auto_win_numbers,
             'auto_win': True,
+        }
+
+
+class GameFactory8AddNumbers(GameFactory):
+
+    def __init__(self, name_game='test_lotto2', amount_games=3, game_ids=[], numbers_in_lotto=20,
+                 add_numbers=1, fields_games=None, only_games_json=False):
+
+        self.name_game = name_game
+        self.amount_games = amount_games
+        self.game_ids = game_ids
+        self.numbers_in_lotto = numbers_in_lotto
+        self.add_numbers = add_numbers
+        self.fields_games = fields_games
+        self.only_games_json = only_games_json
+
+        self.decide_to_take_fields_games(fields_games, only_games_json)
+
+    def get_fields(self, game_id):
+        list_numbers = list(range(1, self.numbers_in_lotto+1))
+        shuffle(list_numbers)
+        numbers = [n for n in list_numbers[0:8]]
+        return {
+            'name_game': self.name_game,
+            'game_id': game_id,
+            'numbers': numbers,
+            'add_numbers': self.get_add_numbers(1, 4)
         }
 
 
