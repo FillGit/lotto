@@ -1,33 +1,16 @@
 from copy import deepcopy
 
-from django.db.models import IntegerField
-from django.db.models.functions import Cast
-from rest_framework import status, viewsets
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from lotto_app.app.models import Game
 from lotto_app.app.utils import get_game_info, index_9_parts, shuffle_numbers
 from lotto_app.app.views.games import GameViewSet
+from lotto_app.app.views.research.research import ResearchViewSet
 
 
-class Research90ViewSet(viewsets.ModelViewSet):
-
-    def get_queryset(self):
-        return Game.objects.filter(name_game=self.kwargs['ng']).order_by('game_id')
-
-    def get_game_obj(self):
-        return Game.objects.get(game_id=self.kwargs['pk'], name_game=self.kwargs['ng'])
-
-    def get_general_game_objs(self):
-        name_game = self.kwargs['ng']
-        return Game.objects.filter(
-            name_game=name_game,
-            last_win_number_card__isnull=False,
-            last_win_number_ticket__isnull=False
-        ).annotate(
-            game_id_int=Cast('game_id', output_field=IntegerField())
-        )
+class Research90ViewSet(ResearchViewSet):
 
     @action(detail=True, url_path='comparison_win_ticket', methods=['get'])
     def comparison_win_ticket(self, request, ng, pk=None):
