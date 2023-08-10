@@ -2,22 +2,6 @@ from random import choice, shuffle
 
 from lotto_app.app.models import Game, LottoTickets
 
-"""
-Default win_card and win_ticket of the GameFactory class:
-
-    default
-        "win_card": {"by_account": 35, "last_win_number_ticket": xxx}
-        "win_ticket": {"by_account": 60, "last_win_number_ticket": xxx}
-
-    default in_order_numbers = True
-        "win_card": {"by_account": 35, "last_win_number_ticket": 35}
-        "win_ticket": {"by_account": 60, "last_win_number_ticket": 60}
-
-    default get_game_auto_win_json()
-        "win_card": {"by_account": 37, "last_win_number_ticket": xxx}
-        "win_ticket": {"by_account": 62, "last_win_number_ticket": xxx}
-"""
-
 
 class GameFactory():
     def decide_to_take_fields_games(self, fields_games, only_games_json):
@@ -50,6 +34,23 @@ class GameFactory():
             list_numbers = list(range(1, max_number+1))
             add_numbers.append(choice(list_numbers))
         return add_numbers
+
+
+"""
+Default win_card and win_ticket of the GameFactory90 class:
+
+    default
+        "win_card": {"by_account": 35, "last_win_number_ticket": xxx}
+        "win_ticket": {"by_account": 60, "last_win_number_ticket": xxx}
+
+    default in_order_numbers = True
+        "win_card": {"by_account": 35, "last_win_number_ticket": 35}
+        "win_ticket": {"by_account": 60, "last_win_number_ticket": 60}
+
+    default get_game_auto_win_json()
+        "win_card": {"by_account": 37, "last_win_number_ticket": xxx}
+        "win_ticket": {"by_account": 62, "last_win_number_ticket": xxx}
+"""
 
 
 class GameFactory90(GameFactory):
@@ -265,3 +266,11 @@ class Fake30Numbers:
 
     numbers_5 = [64, 19, 57, 84, 2, 48, 11, 12, 7, 38, 85, 86, 63, 1, 41, 66, 37, 77, 40, 26, 62, 27,
                  20, 35, 71, 28, 47, 8, 51, 76]
+
+
+class Fake8Numbers:
+    numbers_1 = [5, 9, 11, 3, 10, 20, 6, 2]
+    numbers_2 = [14, 15, 12, 11, 4, 19, 13, 16]
+    numbers_3 = [8, 10, 5, 7, 17, 6, 1, 2]
+    numbers_4 = [13, 15, 2, 18, 20, 10, 8, 3]
+    numbers_5 = [20, 17, 2, 5, 13, 3, 4, 12]

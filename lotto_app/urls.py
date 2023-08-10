@@ -5,7 +5,8 @@ from rest_framework.routers import DefaultRouter
 from lotto_app.app.views.games import GameViewSet
 from lotto_app.app.views.lotto_tickets import LottoTicketsViewSet
 from lotto_app.app.views.pc_choice import PcChoiceViewSet
-from lotto_app.app.views.researchs import ResearchViewSet
+from lotto_app.app.views.research.research_8_add import Research8AddViewSet
+from lotto_app.app.views.research.research_90 import Research90ViewSet
 from lotto_app.app.views.send_email import CheckSendEmailViewSet
 from lotto_app.app.views.state_tickets import StateNumbersViewSet
 from lotto_app.app.views.users import GroupViewSet, UserViewSet
@@ -23,7 +24,9 @@ router.register(r'state_numbers', StateNumbersViewSet, basename='state_numbers')
 
 router.register(r'pc_choice', PcChoiceViewSet, basename='pc_choice')
 
-router.register(r'research', ResearchViewSet, basename='research')
+router.register(r'research_90', Research90ViewSet, basename='research_90')
+
+router.register(r'research_8_add', Research8AddViewSet, basename='research_8_add')
 
 router.register(r'lotto_tickets', LottoTicketsViewSet, basename='lotto_tickets')
 

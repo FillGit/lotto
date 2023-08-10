@@ -1,5 +1,5 @@
 from django_webtest import WebTest
-from hamcrest import assert_that, calling, has_item, has_items, is_, is_not, raises
+from hamcrest import assert_that, calling, contains_inanyorder, has_item, has_items, is_, is_not, raises
 from webtest.app import AppError
 
 from lotto_app.app.models import Game
@@ -19,7 +19,7 @@ def get_fields_games(numbers, game_id):
 
 
 class GamesNoNumbersTest(WebTest):
-    endpoint = '/test_lotto1/research/'
+    endpoint = '/test_lotto1/research_90/'
 
     def setUp(self):
         super(GamesNoNumbersTest, self).setUp()
@@ -66,7 +66,7 @@ class GamesNoNumbersTest(WebTest):
 class ComparisonPartsWinTicketTest(WebTest):
 
     def _get_endpoint(self, game_id):
-        return f'/test_lotto1/research/{game_id}/comparison_parts_win_ticket/'
+        return f'/test_lotto1/research_90/{game_id}/comparison_parts_win_ticket/'
 
     def test_happy_path_comparison_parts_win_ticket(self):
         game_factory = [GameFactory90(fields_games=get_fields_games(F87Ns.numbers_1, 1))]
@@ -113,7 +113,7 @@ class ComparisonPartsWinTicketTest(WebTest):
 class Games9PartsIntoWinTicketTest(WebTest):
 
     def _get_endpoint(self, game_id):
-        return f'/test_lotto1/research/{game_id}/games_9_parts_into_win_ticket/'
+        return f'/test_lotto1/research_90/{game_id}/games_9_parts_into_win_ticket/'
 
     def test_happy_path_games_9_parts_into_win_ticket(self):
         GameFactory90(fields_games=get_fields_games(F87Ns.numbers_1, 1))
@@ -168,7 +168,7 @@ class Games9PartsIntoWinTicketTest(WebTest):
 class FutureCombinationWinTicketTest(WebTest):
 
     def _get_endpoint(self, game_id):
-        return f'/test_lotto1/research/{game_id}/future_combination_win_ticket/'
+        return f'/test_lotto1/research_90/{game_id}/future_combination_win_ticket/'
 
     def test_happy_path_future_combination_win_ticket(self):
         GameFactory90(fields_games=get_fields_games(F87Ns.numbers_1, 1))
@@ -274,3 +274,29 @@ class FutureCombinationWinTicketTest(WebTest):
 
         assert_that(calling(self.app.get).with_args(self._get_endpoint(5), params=params),
                     raises(AppError))
+
+
+class ComparisonWinTicketTest(WebTest):
+
+    def _get_endpoint(self, game_id):
+        return f'/test_lotto1/research_90/{game_id}/comparison_win_ticket/'
+
+    def test_happy_path_comparison_win_ticket(self):
+        GameFactory90(fields_games=get_fields_games(F87Ns.numbers_1, 1))
+        GameFactory90(fields_games=get_fields_games(F87Ns.numbers_2, 2))
+        GameFactory90(fields_games=get_fields_games(F87Ns.numbers_3, 3))
+        GameFactory90(fields_games=get_fields_games(F87Ns.numbers_4, 4))
+        GameFactory90(fields_games=get_fields_games(F87Ns.numbers_5, 5))
+
+        resp = self.app.get(self._get_endpoint(5))
+        assert_that(resp.json.keys(),
+                    contains_inanyorder('main_game', '1', '3', '2', '4'))
+        assert_that(resp.json['main_game'], is_('5'))
+        assert_that(resp.json['1'],
+                    is_([44, [1, 6, 7, 8, 12, 13, 14, 16, 17, 18, 20, 21, 23, 28, 31,
+                              32, 33, 36, 37, 38, 42, 44, 46, 47, 48, 49, 50, 51, 54,
+                              55, 56, 61, 64, 67, 70, 72, 76, 77, 78, 79, 80, 84, 87, 90]]))
+        assert_that(resp.json['4'],
+                    is_([39, [1, 4, 6, 7, 8, 12, 13, 14, 17, 20, 27, 28, 29, 31, 32,
+                              33, 36, 37, 44, 46, 47, 48, 49, 50, 51, 52, 55, 57, 65,
+                              67, 69, 72, 73, 77, 79, 80, 83, 84, 87]]))
