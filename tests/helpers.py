@@ -23,7 +23,6 @@ class GameFactory():
         return [self.get_fields(_id) for _id in self.game_ids]
 
     def set_games_db(self):
-        print(self.fields_games)
         return Game.objects.bulk_create([Game(**fields) for fields in self.fields_games])
 
     def get_game_json(self, index=0):
