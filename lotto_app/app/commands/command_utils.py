@@ -39,12 +39,12 @@ class CombinationOptions8Add():
         return sorted(combination_8_add, reverse=True)
 
     def _get_sum_combination_options(self, combination_options):
-        sum_combination_options = {k: 0 for k, _ in COMBINATION_OPTIONS_8_ADD.items()}
+        _sum_combination = {k: 0 for k, _ in COMBINATION_OPTIONS_8_ADD.items()}
         for name, seq in COMBINATION_OPTIONS_8_ADD.items():
             for _, combination in combination_options.items():
                 if combination == seq:
-                    sum_combination_options[name] += 1
-        return sum_combination_options
+                    _sum_combination[name] += 1
+        return {name: seq for name, seq in _sum_combination.items() if seq != 0}
 
     def get_combination_options(self):
         combination_options = {game_obj.game_id: self._get_combination_options_8_add(game_obj.numbers)
