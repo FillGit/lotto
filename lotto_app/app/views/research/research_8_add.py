@@ -1,6 +1,7 @@
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from lotto_app.app.commands.command_utils import CombinationOptions8Add
 from lotto_app.app.views.research.research import ResearchViewSet
 
 
@@ -21,3 +22,12 @@ class Research8AddViewSet(ResearchViewSet):
         resp = {'main_game': pk}
         resp.update(dict(sorted(dict_common_numbers.items(), key=lambda item: item[1], reverse=True)))
         return Response(resp, status=200)
+
+    @action(detail=True, url_path='combination_options', methods=['get'])
+    def combination_options(self, request, ng, pk=None):
+        game_start = int(pk)
+        how_games = int(request.query_params.get('how_games', 0))
+        return Response(CombinationOptions8Add(ng,
+                                               game_start,
+                                               how_games).get_combination_options(),
+                        status=200)
