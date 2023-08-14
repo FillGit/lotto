@@ -40,9 +40,12 @@ class Utils8Add():
                 previous_n = n
         return sorted(combination_8_add, reverse=True)
 
-    def get_game_combinations(self):
+    def get_game_combinations(self, how_info_games=None):
+        if not how_info_games:
+            return {game_obj.game_id: self._get_combination_options_8_add(game_obj.numbers)
+                    for game_obj in self.game_objs}
         return {game_obj.game_id: self._get_combination_options_8_add(game_obj.numbers)
-                for game_obj in self.game_objs}
+                for game_obj in self.game_objs[0:how_info_games]}
 
 
 class CombinationOptions8Add(Utils8Add):
@@ -70,11 +73,16 @@ class InfoSequence8Add(Utils8Add):
             info['difference'] = int(previous_game_id) - int(game_obj.game_id)
         return info
 
-    def get_all_info_sequence(self, sequence, only_len_sequence=True):
+    def get_all_info_sequence(self, sequence, only_len_sequence=False, how_info_games=None):
         info = []
         len_sequence = len(sequence)
         game_combinations = self.get_game_combinations()
-        game_objs_by_game_id = {_obj.game_id: _obj for _obj in self.game_objs}
+        if not how_info_games:
+            game_combinations = self.get_game_combinations()
+            game_objs_by_game_id = {_obj.game_id: _obj for _obj in self.game_objs}
+        else:
+            game_combinations = self.get_game_combinations(how_info_games)
+            game_objs_by_game_id = {_obj.game_id: _obj for _obj in self.game_objs[0:how_info_games]}
         previous_game_id = self.game_objs[0].game_id
         for game_id, combination in game_combinations.items():
             _inf = self.get_info_sequence(sequence,
@@ -95,3 +103,13 @@ class InfoSequence8Add(Utils8Add):
                 'max_difference': max(differences),
                 'median': median(differences),
                 'amount_sequence': len(all_info_sequence)}
+
+    def validate_sequence(self, sequence):
+        if len({isinstance(_i, int) for _i in sequence}) != 1:
+            return False
+        len_sequence = len(sequence)
+        first_number = sequence[0]
+        expect_sequence = [_n + first_number for _n in range(0, len_sequence)]
+        if sequence != expect_sequence:
+            return False
+        return True

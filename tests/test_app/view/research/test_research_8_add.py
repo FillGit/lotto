@@ -1,5 +1,6 @@
 from django_webtest import WebTest
 from hamcrest import assert_that, calling, contains_inanyorder, is_, raises
+from webtest.app import AppError
 
 from tests.helpers import Fake8Numbers as F8Ns
 from tests.helpers import GameFactory8AddNumbers as GF8As
@@ -107,3 +108,26 @@ class InfoSequenceTest(WebTest):
                           'max_difference': 7,
                           'median': 5,
                           'amount_sequence': 3}]))
+
+    def test_happy_path_info_sequence_how_info_games(self):
+        self._standart_game_obj()
+        params = {'how_games': 15,
+                  'sequence': '14,15,16',
+                  'how_info_games': 10}
+
+        resp = self.app.get(self._get_endpoint(15), params=params)
+        assert_that(resp.json,
+                    is_([{'11': '11', 'previous game_id': '15', 'difference': 4},
+                         {'7': '7', 'previous game_id': '11', 'difference': 4},
+                         {'min_difference': 4,
+                          'middle_difference': 4,
+                          'max_difference': 4,
+                          'median': 4.0,
+                          'amount_sequence': 2}]))
+
+    def test_happy_path_validate_sequence(self):
+        get_standart_game_obj()
+        params = {'how_games': 5,
+                  'sequence': '13,15'}
+        assert_that(calling(self.app.get).with_args(self._get_endpoint(5), params=params),
+                    raises(AppError))
