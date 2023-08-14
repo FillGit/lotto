@@ -1,4 +1,4 @@
-from statistics import mean
+from statistics import mean, median
 
 from django.db.models import IntegerField
 from django.db.models.functions import Cast
@@ -80,10 +80,10 @@ class InfoSequence8Add(Utils8Add):
             _inf = self.get_info_sequence(sequence,
                                           game_objs_by_game_id[game_id],
                                           previous_game_id)
-            if _inf and only_len_sequence and len_sequence in combination:
+            if _inf and not only_len_sequence and len_sequence <= max(combination):
                 info.append(_inf)
                 previous_game_id = game_id
-            elif _inf and len_sequence >= max(combination):
+            if _inf and only_len_sequence and len_sequence in combination:
                 info.append(_inf)
                 previous_game_id = game_id
         return info
@@ -93,4 +93,5 @@ class InfoSequence8Add(Utils8Add):
         return {'min_difference': min(differences),
                 'middle_difference': mean(differences),
                 'max_difference': max(differences),
+                'median': median(differences),
                 'amount_sequence': len(all_info_sequence)}

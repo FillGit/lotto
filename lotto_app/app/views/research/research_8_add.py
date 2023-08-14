@@ -37,7 +37,7 @@ class Research8AddViewSet(ResearchViewSet):
         game_start = int(pk)
         how_games = int(request.query_params.get('how_games', 0))
         sequence = [int(sequence) for sequence in request.query_params.get('sequence').replace(' ', '').split(',')]
-        only_len_sequence = int(request.query_params.get('only_len_sequence', 1))
+        only_len_sequence = int(request.query_params.get('only_len_sequence', 0))
         i_s = InfoSequence8Add(ng, game_start, how_games)
         all_info_sequence = i_s.get_all_info_sequence(sequence, only_len_sequence)
         all_info_sequence.append(i_s.get_info_difference(all_info_sequence))
