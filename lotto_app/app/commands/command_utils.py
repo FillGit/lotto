@@ -4,6 +4,7 @@ from django.db.models import IntegerField
 from django.db.models.functions import Cast
 
 from lotto_app.app.models import Game
+from lotto_app.config import get_from_config
 from lotto_app.constants import COMBINATION_OPTIONS_8_ADD
 
 
@@ -12,6 +13,8 @@ class Utils8Add():
         self.name_game = name_game
         self.main_game_id = main_game_id
         self.how_games = how_games
+        self.numbers_in_lotto = int(get_from_config('lotto_8_add',
+                                                    f'numbers_in_lotto_{name_game}'))
 
         self.game_objs = self._get_game_objs(name_game, main_game_id, how_games)
 
@@ -67,7 +70,7 @@ class InfoSequence8Add(Utils8Add):
         if not previous_game_id:
             previous_game_id = self.game_objs[0].game_id
 
-        if set(sequence).issubset(set((game_obj.numbers))):
+        if set(sequence).issubset(set(game_obj.numbers)):
             info[game_obj.game_id] = game_obj.game_id
             info['previous game_id'] = previous_game_id
             info['difference'] = int(previous_game_id) - int(game_obj.game_id)
@@ -106,6 +109,8 @@ class InfoSequence8Add(Utils8Add):
 
     def validate_sequence(self, sequence):
         if len({isinstance(_i, int) for _i in sequence}) != 1:
+            return False
+        if not set(sequence).issubset(set([_i for _i in range(1, self.numbers_in_lotto+1)])):
             return False
         len_sequence = len(sequence)
         first_number = sequence[0]
