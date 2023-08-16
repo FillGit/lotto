@@ -48,3 +48,13 @@ class Research8AddViewSet(ResearchViewSet):
         all_info_sequence = i_s.get_all_info_sequence(sequence, only_len_sequence, how_info_games)
         all_info_sequence.append(i_s.get_info_difference(all_info_sequence))
         return Response(all_info_sequence, status=200)
+
+    @action(detail=True, url_path='all_sequences_in_games', methods=['get'])
+    def all_sequences_in_games(self, request, ng, pk=None):
+        game_start = int(pk)
+        how_games = int(request.query_params.get('how_games', 0))
+        part_consists_of = int(request.query_params.get('part_consists_of', 1))
+        how_info_games = int(request.query_params.get('how_info_games', 0))
+        i_s = InfoSequence8Add(ng, game_start, how_games)
+        all_sequences_in_games = i_s.get_all_sequences_in_games(part_consists_of, how_info_games)
+        return Response(all_sequences_in_games, status=200)

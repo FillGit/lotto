@@ -101,6 +101,8 @@ class InfoSequence8Add(Utils8Add):
 
     def get_info_difference(self, all_info_sequence):
         differences = [_info['difference'] for _info in all_info_sequence]
+        if not differences:
+            return {'amount_sequence': 0}
         return {'min_difference': min(differences),
                 'middle_difference': mean(differences),
                 'max_difference': max(differences),
@@ -118,3 +120,12 @@ class InfoSequence8Add(Utils8Add):
         if sequence != expect_sequence:
             return False
         return True
+
+    def get_all_sequences_in_games(self, part_consists_of, how_info_games):
+        all_sequences = Game.get_parts_numbers(part_consists_of,
+                                               [_i for _i in range(1, self.numbers_in_lotto+1)])
+        all_sequences_in_games = {}
+        for sequence in all_sequences:
+            all_info_sequence = self.get_all_info_sequence(sequence, False, how_info_games)
+            all_sequences_in_games[str(sequence)] = self.get_info_difference(all_info_sequence)['amount_sequence']
+        return all_sequences_in_games

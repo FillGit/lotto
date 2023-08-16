@@ -94,8 +94,8 @@ class InfoSequenceTest(WebTest):
                   'sequence': '14,15,16',
                   'only_len_sequence': 1
                   }
-        assert_that(calling(self.app.get).with_args(self._get_endpoint(15), params=params),
-                    raises(ValueError))
+        resp = self.app.get(self._get_endpoint(15), params=params)
+        assert_that(resp.json, is_([{'amount_sequence': 0}]))
 
         params['sequence'] = '9,10,11'
         resp = self.app.get(self._get_endpoint(15), params=params)
@@ -131,3 +131,41 @@ class InfoSequenceTest(WebTest):
                   'sequence': '13,15'}
         assert_that(calling(self.app.get).with_args(self._get_endpoint(5), params=params),
                     raises(AppError))
+
+
+class AllSequencesInGamesTest(WebTest):
+    def _get_endpoint(self, game_id):
+        return f'/test_lotto2/research_8_add/{game_id}/all_sequences_in_games/'
+
+    def _standart_game_obj(self):
+        get_standart_game_obj()
+        get_standart_game_obj([6, 7, 8, 9, 10])
+        get_standart_game_obj([13, 11, 14, 12, 15])
+
+    def test_happy_path_info_all_sequences_in_games_1(self):
+        self._standart_game_obj()
+        params = {'how_games': 15,
+                  'part_consists_of': 1,
+                  'how_info_games': 10}
+
+        resp = self.app.get(self._get_endpoint(15), params=params)
+        assert_that(resp.json,
+                    is_({'[1]': 2, '[2]': 8, '[3]': 6, '[4]': 4, '[5]': 6, '[6]': 4,
+                         '[7]': 2, '[8]': 4, '[9]': 2, '[10]': 6, '[11]': 4, '[12]': 4,
+                         '[13]': 6, '[14]': 2, '[15]': 4, '[16]': 2, '[17]': 4,
+                         '[18]': 2, '[19]': 2, '[20]': 6}))
+
+    def test_happy_path_info_all_sequences_in_games_3(self):
+        self._standart_game_obj()
+        params = {'how_games': 15,
+                  'part_consists_of': 3,
+                  'how_info_games': 10}
+
+        resp = self.app.get(self._get_endpoint(15), params=params)
+        assert_that(resp.json,
+                    is_({'[1, 2, 3]': 0, '[2, 3, 4]': 2, '[3, 4, 5]': 2, '[4, 5, 6]': 0,
+                         '[5, 6, 7]': 2, '[6, 7, 8]': 2, '[7, 8, 9]': 0, '[8, 9, 10]': 0,
+                         '[9, 10, 11]': 2, '[10, 11, 12]': 0, '[11, 12, 13]': 2,
+                         '[12, 13, 14]': 2, '[13, 14, 15]': 2, '[14, 15, 16]': 2,
+                         '[15, 16, 17]': 0, '[16, 17, 18]': 0, '[17, 18, 19]': 0,
+                         '[18, 19, 20]': 0}))
