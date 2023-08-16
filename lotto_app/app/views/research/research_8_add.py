@@ -1,7 +1,8 @@
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from lotto_app.app.commands.command_utils import CombinationOptions8Add
+from lotto_app.app.commands.command_utils import CombinationOptions8Add, InfoSequence8Add
 from lotto_app.app.views.research.research import ResearchViewSet
 
 
@@ -27,7 +28,33 @@ class Research8AddViewSet(ResearchViewSet):
     def combination_options(self, request, ng, pk=None):
         game_start = int(pk)
         how_games = int(request.query_params.get('how_games', 0))
-        return Response(CombinationOptions8Add(ng,
-                                               game_start,
-                                               how_games).get_combination_options(),
-                        status=200)
+        combination_options = CombinationOptions8Add(ng, game_start, how_games)
+        game_combinations = combination_options.get_game_combinations()
+        game_combinations.update(combination_options.get_sum_combination_options(game_combinations))
+        return Response(game_combinations, status=200)
+
+    @action(detail=True, url_path='info_sequence', methods=['get'])
+    def info_sequence(self, request, ng, pk=None):
+        game_start = int(pk)
+        how_games = int(request.query_params.get('how_games', 0))
+        sequence = [int(sequence) for sequence in request.query_params.get('sequence').replace(' ', '').split(',')]
+        only_len_sequence = True if int(request.query_params.get('only_len_sequence', 0)) else False
+        how_info_games = int(request.query_params.get('how_info_games', 0))
+        i_s = InfoSequence8Add(ng, game_start, how_games)
+        if not i_s.validate_sequence(sequence):
+            return Response({"error": "your sequence didn't pass validate."},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        all_info_sequence = i_s.get_all_info_sequence(sequence, only_len_sequence, how_info_games)
+        all_info_sequence.append(i_s.get_info_difference(all_info_sequence))
+        return Response(all_info_sequence, status=200)
+
+    @action(detail=True, url_path='all_sequences_in_games', methods=['get'])
+    def all_sequences_in_games(self, request, ng, pk=None):
+        game_start = int(pk)
+        how_games = int(request.query_params.get('how_games', 0))
+        part_consists_of = int(request.query_params.get('part_consists_of', 1))
+        how_info_games = int(request.query_params.get('how_info_games', 0))
+        i_s = InfoSequence8Add(ng, game_start, how_games)
+        all_sequences_in_games = i_s.get_all_sequences_in_games(part_consists_of, how_info_games)
+        return Response(all_sequences_in_games, status=200)

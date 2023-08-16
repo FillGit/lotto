@@ -1,6 +1,7 @@
 from random import choice, shuffle
 
 from lotto_app.app.models import Game, LottoTickets
+from lotto_app.config import get_from_config
 
 
 class GameFactory():
@@ -136,13 +137,14 @@ class GameFactory90(GameFactory):
 
 class GameFactory8AddNumbers(GameFactory):
 
-    def __init__(self, name_game='test_lotto2', amount_games=3, game_ids=[], numbers_in_lotto=20,
+    def __init__(self, name_game='test_lotto2', amount_games=3, game_ids=[],
                  add_numbers=1, fields_games=None, only_games_json=False):
 
         self.name_game = name_game
         self.amount_games = amount_games
         self.game_ids = game_ids
-        self.numbers_in_lotto = numbers_in_lotto
+        self.numbers_in_lotto = int(get_from_config('lotto_8_add',
+                                                    f'numbers_in_lotto_{name_game}'))
         self.add_numbers = add_numbers
         self.fields_games = fields_games
         self.only_games_json = only_games_json
