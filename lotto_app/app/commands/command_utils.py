@@ -9,14 +9,16 @@ from lotto_app.constants import COMBINATION_OPTIONS_8_ADD
 
 
 class Utils8Add():
-    def __init__(self, name_game, main_game_id, how_games):
+    def __init__(self, name_game, main_game_id, how_games, game_objs=None):
         self.name_game = name_game
         self.main_game_id = main_game_id
         self.how_games = how_games
         self.numbers_in_lotto = int(get_from_config('lotto_8_add',
                                                     f'numbers_in_lotto_{name_game}'))
-
-        self.game_objs = self._get_game_objs(name_game, main_game_id, how_games)
+        if not game_objs:
+            self.game_objs = self._get_game_objs(name_game, main_game_id, how_games)
+        else:
+            self.game_objs = game_objs
 
     def _get_game_objs(self, name_game, main_game_id, how_games):
         return Game.objects.filter(
@@ -79,7 +81,6 @@ class InfoSequence8Add(Utils8Add):
     def get_all_info_sequence(self, sequence, only_len_sequence=False, how_info_games=None):
         info = []
         len_sequence = len(sequence)
-        game_combinations = self.get_game_combinations()
         if not how_info_games:
             game_combinations = self.get_game_combinations()
             game_objs_by_game_id = {_obj.game_id: _obj for _obj in self.game_objs}
@@ -129,3 +130,12 @@ class InfoSequence8Add(Utils8Add):
             all_info_sequence = self.get_all_info_sequence(sequence, False, how_info_games)
             all_sequences_in_games[str(sequence)] = self.get_info_difference(all_info_sequence)['amount_sequence']
         return all_sequences_in_games
+
+
+class Probabilities8Add(InfoSequence8Add):
+    def get_count_sequences(self, part_consists_of, steps_back_games, limit):
+        return {name_seq: sum
+                for name_seq, sum in self.get_all_sequences_in_games(part_consists_of,
+                                                                     steps_back_games).items()
+                if sum >= limit
+                }
