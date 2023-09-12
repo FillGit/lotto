@@ -169,3 +169,34 @@ class AllSequencesInGamesTest(WebTest):
                          '[12, 13, 14]': 2, '[13, 14, 15]': 2, '[14, 15, 16]': 2,
                          '[15, 16, 17]': 0, '[16, 17, 18]': 0, '[17, 18, 19]': 0,
                          '[18, 19, 20]': 0}))
+
+
+class ProbabilitySequencesTest(WebTest):
+    def _get_endpoint(self, game_id):
+        return f'/test_lotto2/research_8_add/{game_id}/probability_sequences/'
+
+    def _standart_game_obj(self):
+        get_standart_game_obj()
+        get_standart_game_obj([6, 7, 8, 9, 10])
+        get_standart_game_obj([13, 11, 14, 12, 15])
+
+    def test_happy_path_info_all_sequences_in_games_1(self):
+        self._standart_game_obj()
+        params = {'how_games': 10,
+                  'part_consists_of': 3,
+                  'steps_back_games': 5,
+                  'limit_overlap': 2,
+                  'limit_amount_seq': 2,
+                  }
+
+        resp = self.app.get(self._get_endpoint(15), params=params)
+        assert_that(resp.json,
+                    is_({'12': {'ids': ['11', '10', '9', '8', '7'],
+                                'exceeding_limit_overlap': {'[11, 12, 13]': 2,
+                                                            '[12, 13, 14]': 2,
+                                                            '[13, 14, 15]': 2,
+                                                            '[14, 15, 16]': 2},
+                                'numbers_have': []},
+                         'check_games': 10,
+                         'exceeding_limit_overlap': 1,
+                         'numbers_have': 0}))

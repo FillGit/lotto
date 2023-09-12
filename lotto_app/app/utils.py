@@ -116,3 +116,7 @@ def shuffle_numbers(set_exist_numbers=None, numbers_in_lotto=90):
         minus_numbers = [mn for mn in range(1, numbers_in_lotto+1)]
     shuffle(minus_numbers)
     return minus_numbers
+
+
+def str_to_list_int(s_str):
+    return [int(i) for i in s_str.replace('[', '').replace(']', '').replace(' ', '').split(',')]
