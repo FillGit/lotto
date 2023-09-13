@@ -76,14 +76,13 @@ class Research8AddViewSet(ResearchViewSet):
 
         probability_sequences = {}
         gen_probability = Probabilities8Add(ng, game_start, how_games + steps_back_games)
-        gen_probability
         for obj in gen_probability.game_objs:
             if int(obj.game_id) > game_end:
                 _id = int(obj.game_id)-1
                 _p8add = Probabilities8Add(
                     ng, _id, steps_back_games,
                     game_objs=self._get_probability_objs(_id, steps_back_games, gen_probability.game_objs)
-                    )
+                )
                 exceeding_limit_overlap = _p8add.get_count_sequences(part_consists_of, steps_back_games, limit_overlap)
                 if exceeding_limit_overlap and len(exceeding_limit_overlap.keys()) >= limit_amount_seq:
                     probability_sequences[obj.game_id] = {
@@ -101,3 +100,38 @@ class Research8AddViewSet(ResearchViewSet):
                                  for k, v in probability_sequences.items() if v['numbers_have']])
         })
         return Response(probability_sequences, status=200)
+
+    @action(detail=True, url_path='probability_one_number', methods=['get'])
+    def probability_one_number(self, request, ng, pk=None):
+        game_start = int(pk)
+        how_games = int(request.query_params.get('how_games', 0))
+        steps_back_games = int(request.query_params.get('steps_back_games'))
+        game_end = game_start - how_games
+
+        probability_one_number = {}
+        gen_probability = Probabilities8Add(ng, game_start, how_games + steps_back_games)
+        for obj in gen_probability.game_objs:
+            if int(obj.game_id) > game_end:
+                _id = int(obj.game_id)-1
+                i_s = InfoSequence8Add(ng, _id, steps_back_games,
+                                       game_objs=self._get_probability_objs(_id, steps_back_games,
+                                                                            gen_probability.game_objs))
+                all_sequences_in_games = i_s.get_all_sequences_in_games(1, steps_back_games)
+                max_number = str_to_list_int(max(all_sequences_in_games,
+                                                 key=all_sequences_in_games.get))[0]
+
+                if max_number in i_s.game_objs[0].numbers and max_number in i_s.game_objs[1].numbers:
+                    probability_one_number[obj.game_id] = {
+                        # 'ids': [_obj.game_id for _obj in i_s.game_objs],
+                        'max_number': {max_number: all_sequences_in_games[f'[{max_number}]']},
+                        'numbers_have': 1 if max_number in obj.numbers else 0
+                    }
+        numbers_have = len([v['numbers_have']
+                            for k, v in probability_one_number.items() if v['numbers_have']])
+        probability_one_number.update({
+            'check_games': how_games,
+            'max_number': len(probability_one_number),
+            'numbers_have': numbers_have,
+            'probability': numbers_have/len(probability_one_number)
+        })
+        return Response(probability_one_number, status=200)
