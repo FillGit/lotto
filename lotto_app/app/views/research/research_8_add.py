@@ -3,8 +3,9 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from lotto_app.app.commands.command_utils import CombinationOptions8Add, InfoSequence8Add, Probabilities8Add
-from lotto_app.app.utils import str_to_list_int
+from lotto_app.app.utils import str_to_list_of_int
 from lotto_app.app.views.research.research import ResearchViewSet
+from statistics import mean
 
 
 class Research8AddViewSet(ResearchViewSet):
@@ -90,7 +91,7 @@ class Research8AddViewSet(ResearchViewSet):
                         'exceeding_limit_overlap': exceeding_limit_overlap,
                         'numbers_have': [
                             seq for seq in exceeding_limit_overlap
-                            if set(str_to_list_int(seq)).issubset(set(obj.numbers))
+                            if set(str_to_list_of_int(seq)).issubset(set(obj.numbers))
                         ]}
 
         probability_sequences.update({
@@ -101,29 +102,49 @@ class Research8AddViewSet(ResearchViewSet):
         })
         return Response(probability_sequences, status=200)
 
+    def _get_max_number(self, sequences_small):
+        return str_to_list_of_int(max(sequences_small,
+                                      key=sequences_small.get))[0]
+
+    def _get_middle_sum(self, sequences_big):
+        list_sum = []
+        for str_number, sum in sequences_big.items():
+            list_sum.append(sum)
+        return mean(list_sum)
+
+    def _probability_one_number_condition(self, max_number, sequences_big, game_objs):
+        if max_number in game_objs[0].numbers and max_number in game_objs[1].numbers and (
+            sequences_big[f'[{max_number}]'] > self._get_middle_sum(sequences_big) + 7
+        ):
+            return True
+        return False
+
     @action(detail=True, url_path='probability_one_number', methods=['get'])
     def probability_one_number(self, request, ng, pk=None):
         game_start = int(pk)
         how_games = int(request.query_params.get('how_games', 0))
-        steps_back_games = int(request.query_params.get('steps_back_games'))
+        steps_back_games_small = int(request.query_params.get('steps_back_games_small'))
+        steps_back_games_big = int(request.query_params.get('steps_back_games_big'))
         game_end = game_start - how_games
 
         probability_one_number = {}
-        gen_probability = Probabilities8Add(ng, game_start, how_games + steps_back_games)
+        gen_probability = Probabilities8Add(ng, game_start, how_games + steps_back_games_big)
         for obj in gen_probability.game_objs:
             if int(obj.game_id) > game_end:
                 _id = int(obj.game_id)-1
-                i_s = InfoSequence8Add(ng, _id, steps_back_games,
-                                       game_objs=self._get_probability_objs(_id, steps_back_games,
+                i_s = InfoSequence8Add(ng, _id, steps_back_games_big,
+                                       game_objs=self._get_probability_objs(_id, steps_back_games_big,
                                                                             gen_probability.game_objs))
-                all_sequences_in_games = i_s.get_all_sequences_in_games(1, steps_back_games)
-                max_number = str_to_list_int(max(all_sequences_in_games,
-                                                 key=all_sequences_in_games.get))[0]
+                sequences_small = i_s.get_all_sequences_in_games(1, steps_back_games_small)
+                sequences_big = i_s.get_all_sequences_in_games(1, steps_back_games_big)
+                max_number = self._get_max_number(sequences_small)
 
-                if max_number in i_s.game_objs[0].numbers and max_number in i_s.game_objs[1].numbers:
+                if self._probability_one_number_condition(max_number,
+                                                          sequences_big,
+                                                          i_s.game_objs):
                     probability_one_number[obj.game_id] = {
                         # 'ids': [_obj.game_id for _obj in i_s.game_objs],
-                        'max_number': {max_number: all_sequences_in_games[f'[{max_number}]']},
+                        'max_number': {max_number: sequences_small[f'[{max_number}]']},
                         'numbers_have': 1 if max_number in obj.numbers else 0
                     }
         numbers_have = len([v['numbers_have']
