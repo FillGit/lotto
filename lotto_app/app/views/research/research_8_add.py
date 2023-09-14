@@ -102,19 +102,20 @@ class Research8AddViewSet(ResearchViewSet):
         })
         return Response(probability_sequences, status=200)
 
-    def _get_max_number(self, sequences_small):
-        return str_to_list_of_int(max(sequences_small,
-                                      key=sequences_small.get))[0]
+    def _get_min_number(self, all_sequences_in_games):
+        return str_to_list_of_int(min(all_sequences_in_games,
+                                      key=all_sequences_in_games.get))[0]
 
-    def _get_middle_sum(self, sequences_big):
+    def _get_middle_sum(self, all_sequences_in_games):
         list_sum = []
-        for str_number, sum in sequences_big.items():
+        for str_number, sum in all_sequences_in_games.items():
             list_sum.append(sum)
         return mean(list_sum)
 
-    def _probability_one_number_condition(self, max_number, sequences_big, game_objs):
-        if max_number in game_objs[0].numbers and max_number in game_objs[1].numbers and (
-            sequences_big[f'[{max_number}]'] > self._get_middle_sum(sequences_big) + 7
+    def _probability_one_number_condition(self, min_number, sequences_small, game_objs):
+        print(min_number, game_objs[0].numbers, game_objs[1].numbers, self._get_middle_sum(sequences_small))
+        if min_number in game_objs[0].numbers and min_number in game_objs[1].numbers and (
+            sequences_small[f'[{min_number}]'] < self._get_middle_sum(sequences_small)
         ):
             return True
         return False
@@ -137,15 +138,15 @@ class Research8AddViewSet(ResearchViewSet):
                                                                             gen_probability.game_objs))
                 sequences_small = i_s.get_all_sequences_in_games(1, steps_back_games_small)
                 sequences_big = i_s.get_all_sequences_in_games(1, steps_back_games_big)
-                max_number = self._get_max_number(sequences_small)
+                min_number = self._get_min_number(sequences_big)
 
-                if self._probability_one_number_condition(max_number,
-                                                          sequences_big,
+                if self._probability_one_number_condition(min_number,
+                                                          sequences_small,
                                                           i_s.game_objs):
                     probability_one_number[obj.game_id] = {
                         # 'ids': [_obj.game_id for _obj in i_s.game_objs],
-                        'max_number': {max_number: sequences_small[f'[{max_number}]']},
-                        'numbers_have': 1 if max_number in obj.numbers else 0
+                        'min_number': {min_number: sequences_small[f'[{min_number}]']},
+                        'numbers_have': 1 if min_number in obj.numbers else 0
                     }
         numbers_have = len([v['numbers_have']
                             for k, v in probability_one_number.items() if v['numbers_have']])
