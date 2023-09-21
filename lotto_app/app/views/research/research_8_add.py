@@ -5,7 +5,6 @@ from rest_framework.response import Response
 from lotto_app.app.commands.command_utils import CombinationOptions8Add, InfoSequence8Add, Probabilities8Add
 from lotto_app.app.utils import str_to_list_of_int
 from lotto_app.app.views.research.research import ResearchViewSet
-from statistics import mean
 
 
 class Research8AddViewSet(ResearchViewSet):
@@ -102,57 +101,95 @@ class Research8AddViewSet(ResearchViewSet):
         })
         return Response(probability_sequences, status=200)
 
-    def _get_min_number(self, all_sequences_in_games):
-        return str_to_list_of_int(min(all_sequences_in_games,
-                                      key=all_sequences_in_games.get))[0]
+    def _part_previous(self, ng, previous_id, steps_back_games_previous, gen_probability):
+        return InfoSequence8Add(
+            ng, previous_id, steps_back_games_previous,
+            game_objs=self._get_probability_objs(previous_id, steps_back_games_previous,
+                                                 gen_probability.game_objs))
 
-    def _get_middle_sum(self, all_sequences_in_games):
-        list_sum = []
-        for str_number, sum in all_sequences_in_games.items():
-            list_sum.append(sum)
-        return mean(list_sum)
+    def _part_big(self, ng, big_id, steps_back_games_big, gen_probability):
+        return InfoSequence8Add(
+            ng, big_id, steps_back_games_big,
+            game_objs=self._get_probability_objs(big_id, steps_back_games_big,
+                                                 gen_probability.game_objs))
 
-    def _probability_one_number_condition(self, min_number, sequences_small, game_objs):
-        print(min_number, game_objs[0].numbers, game_objs[1].numbers, self._get_middle_sum(sequences_small))
-        if min_number in game_objs[0].numbers and min_number in game_objs[1].numbers and (
-            sequences_small[f'[{min_number}]'] < self._get_middle_sum(sequences_small)
-        ):
-            return True
-        return False
+    def _list_repeat(self, i_s, steps_back_games):
+        list_repeat = []
+        for str_number, sum in i_s.get_all_sequences_in_games(1, steps_back_games).items():
+            if sum == steps_back_games:
+                list_repeat.extend(str_to_list_of_int(str_number))
+        return list_repeat
+
+    def _get_set_one_numbers_by_big(self, ng, part_big, steps_back_games_small, gen_probability):
+        list_one_numbers = []
+        for obj in part_big.game_objs:
+            i_s = InfoSequence8Add(ng, obj.game_id, steps_back_games_small,
+                                   game_objs=self._get_probability_objs(obj.game_id,
+                                                                        steps_back_games_small,
+                                                                        gen_probability.game_objs))
+            list_one_numbers.extend(self._list_repeat(i_s, steps_back_games_small))
+        return set(list_one_numbers)
+
+    # def _get_set_one_numbers_by_previous(self, set_one_numbers, part_previous):
+    #     list_one_numbers = []
+    #     list_repeat_by_part_previous = self._list_repeat(part_previous,
+    #                                                      len([pp for pp in part_previous.game_objs]))
+    #     if not list_repeat_by_part_previous:
+    #         return False
+    #     if set_one_numbers & set(list_repeat_by_part_previous):
+    #         return True
+    #     return False
 
     @action(detail=True, url_path='probability_one_number', methods=['get'])
     def probability_one_number(self, request, ng, pk=None):
         game_start = int(pk)
         how_games = int(request.query_params.get('how_games', 0))
+        steps_back_games_previous = int(request.query_params.get('steps_back_games_previous'))
         steps_back_games_small = int(request.query_params.get('steps_back_games_small'))
         steps_back_games_big = int(request.query_params.get('steps_back_games_big'))
         game_end = game_start - how_games
 
         probability_one_number = {}
-        gen_probability = Probabilities8Add(ng, game_start, how_games + steps_back_games_big)
+        gen_probability = Probabilities8Add(
+            ng, game_start,
+            how_games + steps_back_games_previous + steps_back_games_big
+        )
+        # print('len____', len([pp for pp in gen_probability.game_objs]))
+
         for obj in gen_probability.game_objs:
             if int(obj.game_id) > game_end:
-                _id = int(obj.game_id)-1
-                i_s = InfoSequence8Add(ng, _id, steps_back_games_big,
-                                       game_objs=self._get_probability_objs(_id, steps_back_games_big,
-                                                                            gen_probability.game_objs))
-                sequences_small = i_s.get_all_sequences_in_games(1, steps_back_games_small)
-                sequences_big = i_s.get_all_sequences_in_games(1, steps_back_games_big)
-                min_number = self._get_min_number(sequences_big)
+                previous_id = int(obj.game_id)-1
+                part_previous = self._part_previous(ng, previous_id, steps_back_games_previous, gen_probability)
 
-                if self._probability_one_number_condition(min_number,
-                                                          sequences_small,
-                                                          i_s.game_objs):
+                big_id = previous_id - steps_back_games_previous
+                part_big = self._part_big(ng, big_id, steps_back_games_big, gen_probability)
+
+                set_one_numbers_by_big = self._get_set_one_numbers_by_big(ng,
+                                                                          part_big,
+                                                                          steps_back_games_small,
+                                                                          gen_probability)
+                set_one_numbers_by_previous = set(
+                    self._list_repeat(part_previous,
+                                      len([pp for pp in part_previous.game_objs]))
+                )
+                set_one_numbers = set_one_numbers_by_big & set_one_numbers_by_previous
+                if set_one_numbers_by_big and set_one_numbers_by_previous and set_one_numbers and not (
+                    set_one_numbers & set(part_big.game_objs[0].numbers)
+                ):
                     probability_one_number[obj.game_id] = {
                         # 'ids': [_obj.game_id for _obj in i_s.game_objs],
-                        'min_number': {min_number: sequences_small[f'[{min_number}]']},
-                        'numbers_have': 1 if min_number in obj.numbers else 0
+                        'obj.numbers': obj.numbers,
+                        'set_one_numbers': set_one_numbers,
+                        'set_one_numbers_by_big': set_one_numbers_by_big,
+                        'set_one_numbers_by_previous': set_one_numbers_by_previous,
+                        'numbers_have': 1 if set_one_numbers & set(obj.numbers)
+                        else 0
                     }
         numbers_have = len([v['numbers_have']
                             for k, v in probability_one_number.items() if v['numbers_have']])
         probability_one_number.update({
             'check_games': how_games,
-            'max_number': len(probability_one_number),
+            'len_set_one_numbers': len(probability_one_number),
             'numbers_have': numbers_have,
             'probability': numbers_have/len(probability_one_number)
         })

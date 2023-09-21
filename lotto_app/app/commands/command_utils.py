@@ -21,6 +21,8 @@ class Utils8Add():
             self.game_objs = game_objs
 
     def _get_game_objs(self, name_game, main_game_id, how_games):
+        print('DB DB DB', name_game, main_game_id, how_games)
+
         return Game.objects.filter(
             name_game=name_game,
         ).annotate(
