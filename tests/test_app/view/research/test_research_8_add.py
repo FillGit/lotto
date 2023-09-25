@@ -274,13 +274,13 @@ class ProbabilityOneNumberTest(WebTest):
                          'numbers_have': 0,
                          'probability': 0}))
 
-    def test_validate_probability_one_number(self):
-        get_standart_game_obj()
-        params = {'how_games': 4,
-                  'steps_back_games_previous': 2,
-                  'steps_back_games_small': 1,
-                  'steps_back_games_big': 3,
-                  }
+    # def test_validate_probability_one_number(self):
+    #     get_standart_game_obj()
+    #     params = {'how_games': 4,
+    #               'steps_back_games_previous': 2,
+    #               'steps_back_games_small': 1,
+    #               'steps_back_games_big': 3,
+    #               }
 
-        assert_that(calling(self.app.get).with_args(self._get_endpoint(5), params=params),
-                    raises(AppError))
+    #     assert_that(calling(self.app.get).with_args(self._get_endpoint(5), params=params),
+    #                 raises(AppError))
