@@ -144,10 +144,15 @@ class Research8AddViewSet(ResearchViewSet):
             ng, game_start,
             how_games + steps_back_games_previous + steps_back_games_big
         )
+        gen_obj_end = [_obj for _obj in gen_probability.game_objs][-1]
+        if int(gen_obj_end.game_id) != game_end - steps_back_games_previous - steps_back_games_big:
+            return Response({"error": "there are not enough objects."},
+                            status=status.HTTP_400_BAD_REQUEST)
+
         set_not_needed_id = set()
 
         for obj in gen_probability.game_objs:
-            if int(obj.game_id) > game_end:
+            if game_end and int(obj.game_id) > game_end:
                 previous_id = int(obj.game_id)-1
                 part_previous = self._part_previous(ng, previous_id, steps_back_games_previous, gen_probability)
 
@@ -184,6 +189,6 @@ class Research8AddViewSet(ResearchViewSet):
             'check_games': how_games,
             'len_set_one_numbers': len(probability_one_number),
             'numbers_have': numbers_have,
-            'probability': numbers_have/len(probability_one_number),
+            'probability': numbers_have/len(probability_one_number) if len(probability_one_number) > 0 else 0,
         })
         return Response(probability_one_number, status=200)

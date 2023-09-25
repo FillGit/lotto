@@ -21,16 +21,14 @@ class Utils8Add():
             self.game_objs = game_objs
 
     def _get_game_objs(self, name_game, main_game_id, how_games):
-        print('DB DB DB', name_game, main_game_id, how_games)
-
         return Game.objects.filter(
             name_game=name_game,
         ).annotate(
             game_id_int=Cast('game_id', output_field=IntegerField())
         ).filter(
             game_id_int__lte=main_game_id,
-            game_id_int__gte=main_game_id-how_games-5
-        ).order_by('-game_id_int')[0:how_games]
+            game_id_int__gte=main_game_id-how_games
+        ).order_by('-game_id_int')
 
     def _get_combination_options_8_add(self, numbers):
         combination_8_add = [1]
