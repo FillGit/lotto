@@ -130,16 +130,6 @@ class Research8AddViewSet(ResearchViewSet):
             list_one_numbers.extend(self._list_repeat(i_s, steps_back_games_small))
         return set(list_one_numbers)
 
-    # def _get_set_one_numbers_by_previous(self, set_one_numbers, part_previous):
-    #     list_one_numbers = []
-    #     list_repeat_by_part_previous = self._list_repeat(part_previous,
-    #                                                      len([pp for pp in part_previous.game_objs]))
-    #     if not list_repeat_by_part_previous:
-    #         return False
-    #     if set_one_numbers & set(list_repeat_by_part_previous):
-    #         return True
-    #     return False
-
     @action(detail=True, url_path='probability_one_number', methods=['get'])
     def probability_one_number(self, request, ng, pk=None):
         game_start = int(pk)
@@ -154,7 +144,7 @@ class Research8AddViewSet(ResearchViewSet):
             ng, game_start,
             how_games + steps_back_games_previous + steps_back_games_big
         )
-        # print('len____', len([pp for pp in gen_probability.game_objs]))
+        set_not_needed_id = set()
 
         for obj in gen_probability.game_objs:
             if int(obj.game_id) > game_end:
@@ -174,23 +164,26 @@ class Research8AddViewSet(ResearchViewSet):
                 )
                 set_one_numbers = set_one_numbers_by_big & set_one_numbers_by_previous
                 if set_one_numbers_by_big and set_one_numbers_by_previous and set_one_numbers and not (
-                    set_one_numbers & set(part_big.game_objs[0].numbers)
+                       set_not_needed_id & {game_obj.game_id for game_obj in part_previous.game_objs}
                 ):
                     probability_one_number[obj.game_id] = {
                         # 'ids': [_obj.game_id for _obj in i_s.game_objs],
                         'obj.numbers': obj.numbers,
                         'set_one_numbers': set_one_numbers,
-                        'set_one_numbers_by_big': set_one_numbers_by_big,
                         'set_one_numbers_by_previous': set_one_numbers_by_previous,
                         'numbers_have': 1 if set_one_numbers & set(obj.numbers)
                         else 0
                     }
+                    if probability_one_number[obj.game_id]['numbers_have']:
+                        set_not_needed_id.add(obj.game_id)
+
         numbers_have = len([v['numbers_have']
                             for k, v in probability_one_number.items() if v['numbers_have']])
         probability_one_number.update({
+            'set_not_needed_id': set_not_needed_id,
             'check_games': how_games,
             'len_set_one_numbers': len(probability_one_number),
             'numbers_have': numbers_have,
-            'probability': numbers_have/len(probability_one_number)
+            'probability': numbers_have/len(probability_one_number),
         })
         return Response(probability_one_number, status=200)
