@@ -2,6 +2,7 @@ from django.urls import include, path
 # from django.urls import re_path as url
 from rest_framework.routers import DefaultRouter
 
+from lotto_app.app.views.app_utils.app_utils import AppUtilsSet
 from lotto_app.app.views.games import GameViewSet
 from lotto_app.app.views.lotto_tickets import LottoTicketsViewSet
 from lotto_app.app.views.pc_choice import PcChoiceViewSet
@@ -31,6 +32,8 @@ router.register(r'research_8_add', Research8AddViewSet, basename='research_8_add
 router.register(r'lotto_tickets', LottoTicketsViewSet, basename='lotto_tickets')
 
 router.register(r'send_email', CheckSendEmailViewSet, basename='send_email')
+
+router.register(r'app_utils', AppUtilsSet, basename='app_utils')
 
 # Wire up our API using automatic URL routing.
 # Additionally, we include login URLs for the browsable API.
