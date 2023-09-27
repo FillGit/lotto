@@ -40,7 +40,7 @@ class Parser90Numbers(LottoParser):
         self._validate_numbers(str_numbers)
 
         game_tags = self.soup.find('div', id='content').find('h1')
-        game_id = re.search(r'№\d{3,4},', game_tags.text)[0].replace('№', '').replace(',', '')
+        game_id = re.search(r'№\d{3,4}', game_tags.text)[0].replace('№', '').replace(',', '')
         self.validate_game(game_id)
 
         if (len(str_numbers) != 180):
