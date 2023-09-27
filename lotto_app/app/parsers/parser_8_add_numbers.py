@@ -33,7 +33,7 @@ class Parser8AddNumbers(LottoParser):
         self._validate_add_numbers(add_numbers)
 
         game_tags = self.soup.find('div', id='content').find('h1')
-        game_id = re.search(r'№ \d{6,7},', game_tags.text)[0].replace('№ ', '').replace(',', '')
+        game_id = re.search(r'№ \d{6,7}', game_tags.text)[0].replace('№ ', '').replace(',', '')
         self.validate_game(game_id)
 
         return {'numbers': numbers,
