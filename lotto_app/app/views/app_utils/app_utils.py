@@ -29,3 +29,28 @@ class AppUtilsSet(viewsets.ModelViewSet):
         all_game_ids = [int(_dict['game_id']) for _dict in self.get_queryset().values('game_id')]
         return Response({'first': all_game_ids[-1],
                          'last': all_game_ids[0]}, status=200)
+
+    def repeat_game_objs(self):
+        id_game_objs = {}
+        repeat_game_objs = {}
+        for _obj in self.get_queryset():
+            if _obj.game_id not in id_game_objs:
+                id_game_objs[_obj.game_id] = _obj
+            else:
+                repeat_game_objs[_obj.game_id] = _obj
+        return id_game_objs, repeat_game_objs
+
+    @action(detail=False, url_path='repeat_game', methods=['get'])
+    def repeat_game(self, request, ng):
+        _, repeat_game_objs = self.repeat_game_objs()
+        return Response([k for k in repeat_game_objs], status=200)
+
+    @action(detail=False, url_path='delete_repeat_game', methods=['post'])
+    def delete_repeat_game(self, request, ng):
+        _, repeat_game_objs = self.repeat_game_objs()
+        game_ids = request.data.get('game_ids', None)
+        if game_ids:
+            Game.objects.filter(id__in=game_ids).delete()
+        else:
+            Game.objects.filter(id__in=[_obj.id for k, _obj in repeat_game_objs.items()]).delete()
+        return Response([], status=204)
