@@ -27,10 +27,11 @@ class Game(models.Model):
         models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(89)]),
         size=89, blank=True, null=True)
 
-    constraints = [
-        models.UniqueConstraint(fields=['name_game', 'game_id'],
-                                name='not unique name_game and game_id')
-    ]
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['name_game', 'game_id'],
+                                    name='not unique name_game and game_id')
+        ]
 
     def __str__(self):
         """
