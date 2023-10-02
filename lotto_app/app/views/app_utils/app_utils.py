@@ -45,7 +45,7 @@ class AppUtilsSet(viewsets.ModelViewSet):
         _, repeat_game_objs = self.repeat_game_objs()
         return Response([k for k in repeat_game_objs], status=200)
 
-    @action(detail=False, url_path='delete_repeat_game', methods=['post'])
+    @action(detail=False, url_path='delete_repeat_game', methods=['delete'])
     def delete_repeat_game(self, request, ng):
         _, repeat_game_objs = self.repeat_game_objs()
         game_ids = request.data.get('game_ids', None)
