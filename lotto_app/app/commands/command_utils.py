@@ -2,13 +2,12 @@ from statistics import mean, median
 
 from django.db.models import IntegerField
 from django.db.models.functions import Cast
+from webtest.app import AppError
 
 from lotto_app.app.models import Game
+from lotto_app.app.utils import str_to_list_of_int
 from lotto_app.config import get_from_config
 from lotto_app.constants import COMBINATION_OPTIONS_8_ADD
-from rest_framework.response import Response
-from rest_framework import status
-from lotto_app.app.utils import str_to_list_of_int
 
 
 class Utils8Add():
@@ -30,8 +29,8 @@ class Utils8Add():
             game_id_int=Cast('game_id', output_field=IntegerField())
         ).filter(
             game_id_int__lte=main_game_id,
-            game_id_int__gte=main_game_id-how_games
-        ).order_by('-game_id_int')
+            game_id_int__gte=main_game_id-how_games-5
+        ).order_by('-game_id_int')[0:how_games]
 
     def _get_combination_options_8_add(self, numbers):
         combination_8_add = [1]
@@ -184,18 +183,14 @@ class Probabilities8AddOneNumber():
                                steps_back_games_small,
                                steps_back_games_big):
         game_end = game_start - how_games
-
         probability_one_number = {}
         gen_probability = Probabilities8Add(
             ng, game_start,
             how_games + steps_back_games_previous + steps_back_games_big
         )
         gen_obj_end = [_obj for _obj in gen_probability.game_objs][-1]
-        if int(gen_obj_end.game_id) != game_end - steps_back_games_previous - steps_back_games_big:
-            return Response({"error": "there are not enough objects."},
-                            status=status.HTTP_400_BAD_REQUEST)
-
-        set_not_needed_id = set()
+        if int(gen_obj_end.game_id) != game_end - steps_back_games_previous - steps_back_games_big + 1:
+            raise AppError("There are not enough objects!")
 
         for obj in gen_probability.game_objs:
             if game_end and int(obj.game_id) > game_end:
@@ -215,7 +210,7 @@ class Probabilities8AddOneNumber():
                 )
                 set_one_numbers = set_one_numbers_by_big & set_one_numbers_by_previous
                 if set_one_numbers_by_big and set_one_numbers_by_previous and set_one_numbers and not (
-                    set_not_needed_id & {game_obj.game_id for game_obj in part_previous.game_objs}
+                    set_one_numbers & set(part_big.game_objs[0].numbers)
                 ):
                     probability_one_number[obj.game_id] = {
                         'obj.numbers': obj.numbers,
@@ -224,6 +219,5 @@ class Probabilities8AddOneNumber():
                         'numbers_have': 1 if set_one_numbers & set(obj.numbers)
                         else 0
                     }
-                    if probability_one_number[obj.game_id]['numbers_have']:
-                        set_not_needed_id.add(obj.game_id)
-        return probability_one_number, set_not_needed_id
+
+        return probability_one_number

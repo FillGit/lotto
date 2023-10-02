@@ -2,7 +2,12 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from lotto_app.app.commands.command_utils import CombinationOptions8Add, InfoSequence8Add, Probabilities8Add, Probabilities8AddOneNumber
+from lotto_app.app.commands.command_utils import (
+    CombinationOptions8Add,
+    InfoSequence8Add,
+    Probabilities8Add,
+    Probabilities8AddOneNumber
+)
 from lotto_app.app.utils import str_to_list_of_int
 from lotto_app.app.views.research.research import ResearchViewSet
 
@@ -106,18 +111,16 @@ class Research8AddViewSet(ResearchViewSet):
         steps_back_games_small = int(request.query_params.get('steps_back_games_small'))
         steps_back_games_big = int(request.query_params.get('steps_back_games_big'))
 
-        probability_one_number, set_not_needed_id = Probabilities8AddOneNumber().probability_one_number(
+        probability_one_number = Probabilities8AddOneNumber().probability_one_number(
             ng, game_start, how_games,
             steps_back_games_previous,
             steps_back_games_small,
             steps_back_games_big
         )
-
         numbers_have = len([v['numbers_have']
                             for k, v in probability_one_number.items() if v['numbers_have']])
 
         probability_one_number.update({
-            'set_not_needed_id': set_not_needed_id,
             'check_games': how_games,
             'len_set_one_numbers': len(probability_one_number),
             'numbers_have': numbers_have,

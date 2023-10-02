@@ -229,13 +229,12 @@ class ProbabilityOneNumberTest(WebTest):
                                'set_one_numbers': [2],
                                'set_one_numbers_by_previous': [2],
                                'numbers_have': 0},
-                         'set_not_needed_id': ['15'],
                          'check_games': 6,
                          'len_set_one_numbers': 2,
                          'numbers_have': 1,
                          'probability': 0.5}))
 
-    def test_probability_one_number_set_not_needed_id(self):
+    def test_probability_one_number_one_number_empty(self):
         [GF8As(fields_games=get_fields_games(F8Ns.numbers_1, [1], i)) for i in range(1, 8)]
         params = {'how_games': 2,
                   'steps_back_games_previous': 1,
@@ -243,44 +242,19 @@ class ProbabilityOneNumberTest(WebTest):
                   'steps_back_games_big': 4,
                   }
 
-        resp = self.app.get(self._get_endpoint(8), params=params)
+        resp = self.app.get(self._get_endpoint(7), params=params)
         assert_that(resp.json,
-                    is_({'7': {'obj.numbers': [5, 9, 11, 3, 10, 20, 6, 2],
-                               'set_one_numbers': [2, 3, 5, 6, 9, 10, 11, 20],
-                               'set_one_numbers_by_previous': [2, 3, 5, 6, 9, 10, 11, 20],
-                               'numbers_have': 1},
-                        'set_not_needed_id': ['7'],
-                         'check_games': 2,
-                         'len_set_one_numbers': 1,
-                         'numbers_have': 1,
-                         'probability': 1.0}))
-
-    def test_probability_one_number_empty(self):
-        for i in range(1, 8):
-            if i % 2:
-                GF8As(fields_games=get_fields_games([1, 2, 3, 4, 5, 6, 7, 8], [1], i))
-            else:
-                GF8As(fields_games=get_fields_games([11, 12, 13, 14, 15, 16, 17, 18], [1], i))
-        params = {'how_games': 2,
-                  'steps_back_games_previous': 2,
-                  'steps_back_games_small': 2,
-                  'steps_back_games_big': 3,
-                  }
-        resp = self.app.get(self._get_endpoint(8), params=params)
-        assert_that(resp.json,
-                    is_({'set_not_needed_id': [],
-                         'check_games': 2,
+                    is_({'check_games': 2,
                          'len_set_one_numbers': 0,
                          'numbers_have': 0,
                          'probability': 0}))
 
-    # def test_validate_probability_one_number(self):
-    #     get_standart_game_obj()
-    #     params = {'how_games': 4,
-    #               'steps_back_games_previous': 2,
-    #               'steps_back_games_small': 1,
-    #               'steps_back_games_big': 3,
-    #               }
-
-    #     assert_that(calling(self.app.get).with_args(self._get_endpoint(5), params=params),
-    #                 raises(AppError))
+    def test_validate_probability_one_number(self):
+        get_standart_game_obj()
+        params = {'how_games': 4,
+                  'steps_back_games_previous': 2,
+                  'steps_back_games_small': 1,
+                  'steps_back_games_big': 3,
+                  }
+        assert_that(calling(self.app.get).with_args(self._get_endpoint(5), params=params),
+                    raises(AppError))
