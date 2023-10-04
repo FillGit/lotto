@@ -2,8 +2,13 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from lotto_app.app.commands.command_utils import CombinationOptions8Add, InfoSequence8Add, Probabilities8Add
-from lotto_app.app.utils import str_to_list_int
+from lotto_app.app.commands.command_utils import (
+    CombinationOptions8Add,
+    InfoSequence8Add,
+    Probabilities8Add,
+    Probabilities8AddOneNumber
+)
+from lotto_app.app.utils import str_to_list_of_int
 from lotto_app.app.views.research.research import ResearchViewSet
 
 
@@ -60,10 +65,6 @@ class Research8AddViewSet(ResearchViewSet):
         all_sequences_in_games = i_s.get_all_sequences_in_games(part_consists_of, how_info_games)
         return Response(all_sequences_in_games, status=200)
 
-    def _get_probability_objs(self, game_id, steps_back_games, gen_objs):
-        ids = [str(_id) for _id in range(int(game_id), int(game_id) - steps_back_games, -1)]
-        return [obj for obj in gen_objs if obj.game_id in ids]
-
     @action(detail=True, url_path='probability_sequences', methods=['get'])
     def probability_sequences(self, request, ng, pk=None):
         game_start = int(pk)
@@ -76,14 +77,14 @@ class Research8AddViewSet(ResearchViewSet):
 
         probability_sequences = {}
         gen_probability = Probabilities8Add(ng, game_start, how_games + steps_back_games)
-        gen_probability
         for obj in gen_probability.game_objs:
             if int(obj.game_id) > game_end:
                 _id = int(obj.game_id)-1
                 _p8add = Probabilities8Add(
                     ng, _id, steps_back_games,
-                    game_objs=self._get_probability_objs(_id, steps_back_games, gen_probability.game_objs)
-                    )
+                    game_objs=gen_probability._get_probability_objs(_id, steps_back_games,
+                                                                    gen_probability.game_objs)
+                )
                 exceeding_limit_overlap = _p8add.get_count_sequences(part_consists_of, steps_back_games, limit_overlap)
                 if exceeding_limit_overlap and len(exceeding_limit_overlap.keys()) >= limit_amount_seq:
                     probability_sequences[obj.game_id] = {
@@ -91,7 +92,7 @@ class Research8AddViewSet(ResearchViewSet):
                         'exceeding_limit_overlap': exceeding_limit_overlap,
                         'numbers_have': [
                             seq for seq in exceeding_limit_overlap
-                            if set(str_to_list_int(seq)).issubset(set(obj.numbers))
+                            if set(str_to_list_of_int(seq)).issubset(set(obj.numbers))
                         ]}
 
         probability_sequences.update({
@@ -101,3 +102,28 @@ class Research8AddViewSet(ResearchViewSet):
                                  for k, v in probability_sequences.items() if v['numbers_have']])
         })
         return Response(probability_sequences, status=200)
+
+    @action(detail=True, url_path='probability_one_number', methods=['get'])
+    def probability_one_number(self, request, ng, pk=None):
+        game_start = int(pk)
+        how_games = int(request.query_params.get('how_games', 0))
+        steps_back_games_previous = int(request.query_params.get('steps_back_games_previous'))
+        steps_back_games_small = int(request.query_params.get('steps_back_games_small'))
+        steps_back_games_big = int(request.query_params.get('steps_back_games_big'))
+
+        probability_one_number = Probabilities8AddOneNumber().probability_one_number(
+            ng, game_start, how_games,
+            steps_back_games_previous,
+            steps_back_games_small,
+            steps_back_games_big
+        )
+        numbers_have = len([v['numbers_have']
+                            for k, v in probability_one_number.items() if v['numbers_have']])
+
+        probability_one_number.update({
+            'check_games': how_games,
+            'len_set_one_numbers': len(probability_one_number),
+            'numbers_have': numbers_have,
+            'probability': numbers_have/len(probability_one_number) if len(probability_one_number) > 0 else 0,
+        })
+        return Response(probability_one_number, status=200)

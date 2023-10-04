@@ -2,6 +2,7 @@ from django_webtest import WebTest
 from hamcrest import assert_that, calling, contains_inanyorder, is_, raises
 from webtest.app import AppError
 
+from lotto_app.app.commands.command_utils import Probabilities8Add, Probabilities8AddOneNumber
 from tests.helpers import Fake8Numbers as F8Ns
 from tests.helpers import GameFactory8AddNumbers as GF8As
 
@@ -125,7 +126,7 @@ class InfoSequenceTest(WebTest):
                           'median': 4.0,
                           'amount_sequence': 2}]))
 
-    def test_happy_path_validate_sequence(self):
+    def test_validate_sequence(self):
         get_standart_game_obj()
         params = {'how_games': 5,
                   'sequence': '13,15'}
@@ -180,7 +181,7 @@ class ProbabilitySequencesTest(WebTest):
         get_standart_game_obj([6, 7, 8, 9, 10])
         get_standart_game_obj([13, 11, 14, 12, 15])
 
-    def test_happy_path_info_all_sequences_in_games_1(self):
+    def test_happy_path_probability_sequences(self):
         self._standart_game_obj()
         params = {'how_games': 10,
                   'part_consists_of': 3,
@@ -200,3 +201,92 @@ class ProbabilitySequencesTest(WebTest):
                          'check_games': 10,
                          'exceeding_limit_overlap': 1,
                          'numbers_have': 0}))
+
+
+class ProbabilityOneNumberTest(WebTest):
+    def _get_endpoint(self, game_id):
+        return f'/test_lotto2/research_8_add/{game_id}/probability_one_number/'
+
+    def _standart_game_obj(self):
+        get_standart_game_obj()
+        get_standart_game_obj([6, 7, 8, 9, 10])
+        get_standart_game_obj([13, 11, 14, 12, 15])
+
+    def test_happy_path_probability_one_number(self):
+        self._standart_game_obj()
+        params = {'how_games': 6,
+                  'steps_back_games_previous': 3,
+                  'steps_back_games_small': 3,
+                  'steps_back_games_big': 5,
+                  }
+
+        resp = self.app.get(self._get_endpoint(15), params=params)
+        assert_that(resp.json,
+                    is_({'15': {'obj.numbers': [20, 17, 2, 5, 13, 3, 4, 12],
+                                'set_one_numbers': [2],
+                                'set_one_numbers_by_previous': [2, 10],
+                                'numbers_have': 1},
+                        '11': {'obj.numbers': [14, 15, 12, 11, 4, 19, 13, 16],
+                               'set_one_numbers': [2],
+                               'set_one_numbers_by_previous': [2],
+                               'numbers_have': 0},
+                         'check_games': 6,
+                         'len_set_one_numbers': 2,
+                         'numbers_have': 1,
+                         'probability': 0.5}))
+
+    def test_probability_one_number_one_number_empty(self):
+        [GF8As(fields_games=get_fields_games(F8Ns.numbers_1, [1], i)) for i in range(1, 8)]
+        params = {'how_games': 2,
+                  'steps_back_games_previous': 1,
+                  'steps_back_games_small': 2,
+                  'steps_back_games_big': 4,
+                  }
+
+        resp = self.app.get(self._get_endpoint(7), params=params)
+        assert_that(resp.json,
+                    is_({'check_games': 2,
+                         'len_set_one_numbers': 0,
+                         'numbers_have': 0,
+                         'probability': 0}))
+
+    def test_get_probability_one_number(self):
+        self._standart_game_obj()
+
+        def _data_expect(previous_id):
+            _one_number = Probabilities8AddOneNumber()
+            gen_probability = Probabilities8Add('test_lotto2', 14, 14)
+            big_id = previous_id - 3
+            part_big = _one_number._part_big('test_lotto2', big_id, 5, gen_probability)
+            set_one_numbers_by_big = _one_number.get_set_one_numbers_by_big(
+                'test_lotto2', part_big,
+                3,
+                gen_probability
+            )
+            set_one_numbers_by_previous = _one_number.get_set_one_numbers_by_previous(
+                'test_lotto2', previous_id,
+                3,
+                gen_probability
+            )
+            return _one_number.get_probability_one_number(
+                set_one_numbers_by_previous,
+                set_one_numbers_by_big,
+                part_big
+            )
+
+        assert_that(_data_expect(14), is_({2}))
+        assert_that(_data_expect(13), is_(False))
+        assert_that(_data_expect(12), is_(False))
+        assert_that(_data_expect(11), is_(False))
+        assert_that(_data_expect(10), is_({2}))
+        assert_that(_data_expect(9), is_(False))
+
+    def test_validate_probability_one_number(self):
+        get_standart_game_obj()
+        params = {'how_games': 4,
+                  'steps_back_games_previous': 2,
+                  'steps_back_games_small': 1,
+                  'steps_back_games_big': 3,
+                  }
+        assert_that(calling(self.app.get).with_args(self._get_endpoint(5), params=params),
+                    raises(AppError))
