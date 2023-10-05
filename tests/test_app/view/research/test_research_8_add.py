@@ -2,7 +2,7 @@ from django_webtest import WebTest
 from hamcrest import assert_that, calling, contains_inanyorder, is_, raises
 from webtest.app import AppError
 
-from lotto_app.app.commands.command_utils import Probabilities8Add, Probabilities8AddOneNumber
+from lotto_app.app.management.command_utils.command_utils import Probabilities8Add, Probabilities8AddOneNumber
 from tests.helpers import Fake8Numbers as F8Ns
 from tests.helpers import GameFactory8AddNumbers as GF8As
 
