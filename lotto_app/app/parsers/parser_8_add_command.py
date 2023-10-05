@@ -20,4 +20,4 @@ class ParserCommand8Add(LottoParser):
         _time_obj = datetime.datetime.strptime(_x_texts[1].replace('\n', ''), '%d.%m.%Y %H:%M:%S')
         game_id = _x_texts[2].replace('\n', '')
         self.validate_game_id(game_id)
-        return {'game_id': game_id, 'time_obj': _time_obj}
+        return {'game_id': game_id, 'time_obj': _time_obj, 'draft_data': _x_texts[3]}
