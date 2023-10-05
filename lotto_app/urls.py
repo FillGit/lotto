@@ -5,6 +5,7 @@ from rest_framework.routers import DefaultRouter
 from lotto_app.app.views.app_utils.app_utils import AppUtilsSet
 from lotto_app.app.views.games import GameViewSet
 from lotto_app.app.views.lotto_tickets import LottoTicketsViewSet
+from lotto_app.app.views.parsers import ParserViewSet
 from lotto_app.app.views.pc_choice import PcChoiceViewSet
 from lotto_app.app.views.research.research_8_add import Research8AddViewSet
 from lotto_app.app.views.research.research_90 import Research90ViewSet
@@ -34,6 +35,8 @@ router.register(r'lotto_tickets', LottoTicketsViewSet, basename='lotto_tickets')
 router.register(r'send_email', CheckSendEmailViewSet, basename='send_email')
 
 router.register(r'app_utils', AppUtilsSet, basename='app_utils')
+
+router.register(r'parsers', ParserViewSet, basename='parsers')
 
 # Wire up our API using automatic URL routing.
 # Additionally, we include login URLs for the browsable API.
