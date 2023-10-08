@@ -155,7 +155,7 @@ class Probabilities8AddOneNumber():
             game_objs=gen_probability._get_probability_objs(previous_id, steps_back_games_previous,
                                                             gen_probability.game_objs))
 
-    def _part_big(self, ng, big_id, steps_back_games_big, gen_probability):
+    def part_big(self, ng, big_id, steps_back_games_big, gen_probability):
         return InfoSequence8Add(
             ng, big_id, steps_back_games_big,
             game_objs=gen_probability._get_probability_objs(big_id, steps_back_games_big,
@@ -217,7 +217,7 @@ class Probabilities8AddOneNumber():
             if game_end and int(obj.game_id) > game_end:
                 previous_id = int(obj.game_id)-1
                 big_id = previous_id - steps_back_games_previous
-                part_big = self._part_big(ng, big_id, steps_back_games_big, gen_probability)
+                part_big = self.part_big(ng, big_id, steps_back_games_big, gen_probability)
                 set_one_numbers_by_big = self.get_set_one_numbers_by_big(
                     ng, part_big,
                     steps_back_games_small,
