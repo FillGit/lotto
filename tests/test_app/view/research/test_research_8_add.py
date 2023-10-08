@@ -2,7 +2,7 @@ from django_webtest import WebTest
 from hamcrest import assert_that, calling, contains_inanyorder, is_, raises
 from webtest.app import AppError
 
-from lotto_app.app.commands.command_utils import Probabilities8Add, Probabilities8AddOneNumber
+from lotto_app.app.management.command_utils.command_utils import Probabilities8Add, Probabilities8AddOneNumber
 from tests.helpers import Fake8Numbers as F8Ns
 from tests.helpers import GameFactory8AddNumbers as GF8As
 
@@ -257,7 +257,7 @@ class ProbabilityOneNumberTest(WebTest):
             _one_number = Probabilities8AddOneNumber()
             gen_probability = Probabilities8Add('test_lotto2', 14, 14)
             big_id = previous_id - 3
-            part_big = _one_number._part_big('test_lotto2', big_id, 5, gen_probability)
+            part_big = _one_number.part_big('test_lotto2', big_id, 5, gen_probability)
             set_one_numbers_by_big = _one_number.get_set_one_numbers_by_big(
                 'test_lotto2', part_big,
                 3,

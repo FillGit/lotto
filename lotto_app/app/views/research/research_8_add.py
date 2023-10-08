@@ -2,7 +2,7 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from lotto_app.app.commands.command_utils import (
+from lotto_app.app.management.command_utils.command_utils import (
     CombinationOptions8Add,
     InfoSequence8Add,
     Probabilities8Add,

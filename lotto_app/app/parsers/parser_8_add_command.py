@@ -1,5 +1,7 @@
 import datetime
 
+import pytz
+
 from lotto_app.app.parsers.lotto_parser import LottoParser
 
 
@@ -18,6 +20,8 @@ class ParserCommand8Add(LottoParser):
         self.validate_status_code()
         _x_texts = [tag.text for tag in self.soup.find('div', {'class': 'main'})]
         _time_obj = datetime.datetime.strptime(_x_texts[1].replace('\n', ''), '%d.%m.%Y %H:%M:%S')
+        time_em = pytz.timezone('Europe/Moscow').localize(_time_obj)
+
         game_id = _x_texts[2].replace('\n', '')
         self.validate_game_id(game_id)
-        return {'game_id': game_id, 'time_obj': _time_obj, 'draft_data': _x_texts[3]}
+        return {'game_id': game_id, 'time_obj': _time_obj, 'time_em': time_em, 'draft_data': _x_texts[3]}
