@@ -7,7 +7,7 @@ from django.core.management.base import BaseCommand
 from django.db.models import IntegerField
 from django.db.models.functions import Cast
 
-from lotto_app.app.management.command_utils import Probabilities8Add, Probabilities8AddOneNumber
+from lotto_app.app.management.command_utils import CombinationOptions8Add, Probabilities8Add, Probabilities8AddOneNumber
 from lotto_app.app.models import Game
 from lotto_app.app.parsers.choise_parsers import ChoiseParsers
 from lotto_app.config import get_from_config
@@ -42,6 +42,7 @@ class Command(BaseCommand):
         self.old_game_id = self._get_start_game_id()
         self.sleep_cycle = None
         self.gen_probability = None
+        self.gen_option = str(get_from_config('command_8add', 'gen_option'))
         self.exclude_one_numbers = []
         self.exclude_two_numbers = []
         self.exclude_three_numbers = []
@@ -92,6 +93,17 @@ class Command(BaseCommand):
         return False, (time_15 - time_now).total_seconds()+120
 
     def _get_forbidden_circulation(self):
+        forbidden_circulation_how_games = int(
+            get_from_config('command_8add', 'forbidden_circulation_how_games'))
+        combination_options = CombinationOptions8Add(
+            self.name_game,
+            self.start_game_id,
+            forbidden_circulation_how_games)
+        game_combinations = combination_options.get_game_combinations()
+        game_combinations.update(combination_options.get_sum_combination_options(game_combinations))
+        if self.gen_option in game_combinations and game_combinations[self.gen_option] == forbidden_circulation_how_games:
+            print('forbidden_circulation')
+            return True
         return False
 
     def _get_exclude_one_numbers(self):
@@ -102,7 +114,6 @@ class Command(BaseCommand):
             steps_back_games_previous = fs['steps_back_games_previous']
             steps_back_games_small = fs['steps_back_games_small']
             steps_back_games_big = fs['steps_back_games_big']
-            print(fs, steps_back_games_previous, steps_back_games_small, steps_back_games_big)
 
             _, set_one_numbers = Probabilities8AddOneNumber().get_probability_one_number(
                 self.name_game, previous_id,
@@ -114,7 +125,7 @@ class Command(BaseCommand):
             if set_one_numbers:
                 exclude_one_numbers.extend(list(set_one_numbers))
 
-        print(exclude_one_numbers)
+        print(exclude_one_numbers, 'exclude_one_numbers')
         return exclude_one_numbers
 
     def _get_exclude_two_numbers(self):
@@ -127,12 +138,12 @@ class Command(BaseCommand):
         return None
 
     def evaluate_future_game(self):
-        start_game_id = self._get_start_game_id()
+        self.start_game_id = int(self._get_start_game_id())
         self.gen_probability = Probabilities8Add(self.name_game,
-                                                 int(start_game_id),
+                                                 self.start_game_id,
                                                  int(get_from_config('command_8add', 'how_games')))
         if self._get_forbidden_circulation():
-            self.old_game_id = self.gen_probability.game_objs[0].game_id
+            self.old_game_id = self.start_game_id
             return False
         i = 0
         self.exclude_one_numbers = self._get_exclude_one_numbers()
@@ -169,7 +180,7 @@ class Command(BaseCommand):
             if not force_sleep and self.evaluate_future_game():
                 choice_numbers = self.pc_choice_numbers()
                 print('choice_numbers', choice_numbers)
-                self.old_game_id = self.gen_probability.game_objs[0].game_id
+                self.old_game_id = self.start_game_id
 
             self.stdout.write(f"Time before sleep: {time_now}, {self.sleep_cycle}s")
             time.sleep(self.sleep_cycle)
