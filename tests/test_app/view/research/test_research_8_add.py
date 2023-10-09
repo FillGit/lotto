@@ -265,11 +265,11 @@ class ProbabilityOneNumberTest(WebTest):
                 )
 
         assert_that(_data_expect(14), is_(({2, 10}, {2})))
-        assert_that(_data_expect(13), is_((False, False)))
-        assert_that(_data_expect(12), is_((False, False)))
-        assert_that(_data_expect(11), is_((False, False)))
+        assert_that(_data_expect(13), is_((set(), set())))
+        assert_that(_data_expect(12), is_(({13}, set())))
+        assert_that(_data_expect(11), is_(({13}, set())))
         assert_that(_data_expect(10), is_(({2}, {2})))
-        assert_that(_data_expect(9), is_((False, False)))
+        assert_that(_data_expect(9), is_((set(), set())))
 
     def test_validate_probability_one_number(self):
         get_standart_game_obj()

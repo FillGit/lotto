@@ -206,12 +206,12 @@ class Probabilities8AddOneNumber():
             gen_probability
         )
 
-        set_one_numbers = set_one_numbers_by_big & set_one_numbers_by_previous
-        if set_one_numbers_by_big and set_one_numbers_by_previous and set_one_numbers and not (
-            set_one_numbers & set(part_big.game_objs[0].numbers)
-        ):
-            return set_one_numbers_by_previous, set_one_numbers
-        return False, False
+        _set_one_numbers = set_one_numbers_by_big & set_one_numbers_by_previous
+        set_one_numbers = _set_one_numbers if (
+            set_one_numbers_by_big and set_one_numbers_by_previous and _set_one_numbers and not (
+                _set_one_numbers & set(part_big.game_objs[0].numbers))) else set()
+
+        return set_one_numbers_by_previous, set_one_numbers
 
     def probability_one_number(self, ng, game_start, how_games,
                                steps_back_games_previous,

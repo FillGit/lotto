@@ -7,7 +7,7 @@ from django.core.management.base import BaseCommand
 from django.db.models import IntegerField
 from django.db.models.functions import Cast
 
-from lotto_app.app.management.command_utils.command_utils import Probabilities8Add, Probabilities8AddOneNumber
+from lotto_app.app.management.command_utils import Probabilities8Add, Probabilities8AddOneNumber
 from lotto_app.app.models import Game
 from lotto_app.app.parsers.choise_parsers import ChoiseParsers
 from lotto_app.config import get_from_config
