@@ -84,12 +84,12 @@ class Command(BaseCommand):
     def get_sleep_cycle(self, time_now, resp_command):
         if self.expected_print_error_command in resp_command['draft_data']:
             self.stdout.write('Данные загружаются на сайт')
-            return True, 90
+            return True, 120
         time_command = resp_command['time_em']
         time_15 = time_command + timedelta(minutes=15)
         if resp_command['game_id'] == self.old_game_id and (time_now - time_15).total_seconds() > 0:
             return True, 300
-        return False, (time_15 - time_now).total_seconds()+90
+        return False, (time_15 - time_now).total_seconds()+120
 
     def _get_forbidden_circulation(self):
         return False
@@ -97,30 +97,22 @@ class Command(BaseCommand):
     def _get_exclude_one_numbers(self):
         one_number_factors = get_one_number_factors()
         exclude_one_numbers = []
-        pon = Probabilities8AddOneNumber()
+        previous_id = int(self.gen_probability.game_objs[0].game_id)
         for fs in one_number_factors:
-            steps_back_games_previous = fs[0]
-            steps_back_games_small = fs[1]
-            steps_back_games_big = fs[2]
-            previous_id = self.gen_probability.game_objs[0].game_id
-            big_id = previous_id - steps_back_games_previous
-            part_big = pon.part_big(self.name_game, big_id, steps_back_games_big, self.gen_probability)
-            set_one_numbers_by_big = pon.get_set_one_numbers_by_big(
-                self.name_game, part_big,
-                steps_back_games_small,
-                self.gen_probability
-            )
-            set_one_numbers_by_previous = pon.get_set_one_numbers_by_previous(
+            steps_back_games_previous = fs['steps_back_games_previous']
+            steps_back_games_small = fs['steps_back_games_small']
+            steps_back_games_big = fs['steps_back_games_big']
+            print(fs, steps_back_games_previous, steps_back_games_small, steps_back_games_big)
+
+            _, set_one_numbers = Probabilities8AddOneNumber().get_probability_one_number(
                 self.name_game, previous_id,
                 steps_back_games_previous,
+                steps_back_games_small,
+                steps_back_games_big,
                 self.gen_probability
             )
-            set_one_numbers = pon.get_probability_one_number(
-                set_one_numbers_by_previous,
-                set_one_numbers_by_big,
-                part_big
-            )
-            exclude_one_numbers.extend(list(set_one_numbers))
+            if set_one_numbers:
+                exclude_one_numbers.extend(list(set_one_numbers))
 
         print(exclude_one_numbers)
         return exclude_one_numbers
@@ -140,12 +132,13 @@ class Command(BaseCommand):
                                                  int(start_game_id),
                                                  int(get_from_config('command_8add', 'how_games')))
         if self._get_forbidden_circulation():
+            self.old_game_id = self.gen_probability.game_objs[0].game_id
             return False
         i = 0
         self.exclude_one_numbers = self._get_exclude_one_numbers()
         self.exclude_two_numbers = self._get_exclude_two_numbers()
         self.exclude_three_numbers = self._get_exclude_three_numbers()
-        self._get_preferred_added_number()
+        self.preferred_added_number = self._get_preferred_added_number()
         i = 0
         if self.exclude_one_numbers:
             i += 1
@@ -176,7 +169,7 @@ class Command(BaseCommand):
             if not force_sleep and self.evaluate_future_game():
                 choice_numbers = self.pc_choice_numbers()
                 print('choice_numbers', choice_numbers)
+                self.old_game_id = self.gen_probability.game_objs[0].game_id
 
-            self.old_game_id = self.gen_probability.game_objs[0].game_id
             self.stdout.write(f"Time before sleep: {time_now}, {self.sleep_cycle}s")
             time.sleep(self.sleep_cycle)

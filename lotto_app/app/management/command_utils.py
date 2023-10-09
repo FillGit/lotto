@@ -188,16 +188,30 @@ class Probabilities8AddOneNumber():
             list_one_numbers.extend(self._list_repeat(i_s, steps_back_games_small))
         return set(list_one_numbers)
 
-    def get_probability_one_number(self,
-                                   set_one_numbers_by_previous,
-                                   set_one_numbers_by_big,
-                                   part_big):
+    def get_probability_one_number(self, ng, previous_id,
+                                   steps_back_games_previous,
+                                   steps_back_games_small,
+                                   steps_back_games_big,
+                                   gen_probability):
+        big_id = previous_id - steps_back_games_previous
+        part_big = self.part_big(ng, big_id, steps_back_games_big, gen_probability)
+        set_one_numbers_by_big = self.get_set_one_numbers_by_big(
+            ng, part_big,
+            steps_back_games_small,
+            gen_probability
+        )
+        set_one_numbers_by_previous = self.get_set_one_numbers_by_previous(
+            ng, previous_id,
+            steps_back_games_previous,
+            gen_probability
+        )
+
         set_one_numbers = set_one_numbers_by_big & set_one_numbers_by_previous
         if set_one_numbers_by_big and set_one_numbers_by_previous and set_one_numbers and not (
             set_one_numbers & set(part_big.game_objs[0].numbers)
         ):
-            return set_one_numbers
-        return False
+            return set_one_numbers_by_previous, set_one_numbers
+        return False, False
 
     def probability_one_number(self, ng, game_start, how_games,
                                steps_back_games_previous,
@@ -216,23 +230,15 @@ class Probabilities8AddOneNumber():
         for obj in gen_probability.game_objs:
             if game_end and int(obj.game_id) > game_end:
                 previous_id = int(obj.game_id)-1
-                big_id = previous_id - steps_back_games_previous
-                part_big = self.part_big(ng, big_id, steps_back_games_big, gen_probability)
-                set_one_numbers_by_big = self.get_set_one_numbers_by_big(
-                    ng, part_big,
-                    steps_back_games_small,
-                    gen_probability
-                )
-                set_one_numbers_by_previous = self.get_set_one_numbers_by_previous(
+
+                set_one_numbers_by_previous, set_one_numbers = self.get_probability_one_number(
                     ng, previous_id,
                     steps_back_games_previous,
+                    steps_back_games_small,
+                    steps_back_games_big,
                     gen_probability
                 )
-                set_one_numbers = self.get_probability_one_number(
-                    set_one_numbers_by_previous,
-                    set_one_numbers_by_big,
-                    part_big
-                )
+
                 if set_one_numbers:
                     probability_one_number[obj.game_id] = {
                         'obj.numbers': obj.numbers,
