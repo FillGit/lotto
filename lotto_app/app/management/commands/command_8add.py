@@ -10,6 +10,7 @@ from django.db.models.functions import Cast
 from lotto_app.app.management.command_utils import CombinationOptions8Add, Probabilities8Add, Probabilities8AddOneNumber
 from lotto_app.app.models import Game
 from lotto_app.app.parsers.choise_parsers import ChoiseParsers
+from lotto_app.app.utils import str_to_list_of_int
 from lotto_app.config import get_from_config
 
 
@@ -108,7 +109,7 @@ class Command(BaseCommand):
 
     def _get_exclude_one_numbers(self):
         one_number_factors = get_one_number_factors()
-        exclude_one_numbers = []
+        set_exclude_one_numbers = set()
         previous_id = int(self.gen_probability.game_objs[0].game_id)
         for fs in one_number_factors:
             steps_back_games_previous = fs['steps_back_games_previous']
@@ -123,16 +124,43 @@ class Command(BaseCommand):
                 self.gen_probability
             )
             if set_one_numbers:
-                exclude_one_numbers.extend(list(set_one_numbers))
+                set_exclude_one_numbers.update(set_one_numbers)
 
+        exclude_one_numbers = list(set_exclude_one_numbers)
         print(exclude_one_numbers, 'exclude_one_numbers')
         return exclude_one_numbers
 
+    def _get_exclude_group_numbers(self, part_consists_of, steps_back_games,
+                                   limit_overlap, limit_amount_seq):
+        exceeding_limit_overlap, _ = self.gen_probability.get_exceeding_limit_overlap(
+            self.name_game, self.start_game_id,
+            part_consists_of, steps_back_games,
+            limit_overlap, self.gen_probability
+        )
+        return [str_to_list_of_int(seq) for seq in exceeding_limit_overlap] if exceeding_limit_overlap and len(
+            exceeding_limit_overlap.keys()) >= limit_amount_seq else []
+
     def _get_exclude_two_numbers(self):
-        return []
+        steps_back_games = int(
+            get_from_config('command_8add', 'two_steps_back_games'))
+        limit_overlap = int(
+            get_from_config('command_8add', 'two_limit_overlap'))
+        limit_amount_seq = int(
+            get_from_config('command_8add', 'two_limit_amount_seq'))
+        exclude_two_numbers = self._get_exclude_group_numbers(2, steps_back_games, limit_overlap, limit_amount_seq)
+        print(exclude_two_numbers, 'exclude_two_numbers')
+        return exclude_two_numbers
 
     def _get_exclude_three_numbers(self):
-        return []
+        steps_back_games = int(
+            get_from_config('command_8add', 'three_steps_back_games'))
+        limit_overlap = int(
+            get_from_config('command_8add', 'three_limit_overlap'))
+        limit_amount_seq = int(
+            get_from_config('command_8add', 'three_limit_amount_seq'))
+        exclude_three_numbers = self._get_exclude_group_numbers(3, steps_back_games, limit_overlap, limit_amount_seq)
+        print(exclude_three_numbers, 'exclude_three_numbers')
+        return exclude_three_numbers
 
     def _get_preferred_added_number(self):
         return None
@@ -161,6 +189,7 @@ class Command(BaseCommand):
             i += 1
         if i >= 2:
             return True
+        self.old_game_id = self.start_game_id
         return False
 
     def pc_choice_numbers(self):
@@ -182,5 +211,6 @@ class Command(BaseCommand):
                 print('choice_numbers', choice_numbers)
                 self.old_game_id = self.start_game_id
 
+            print(self.old_game_id, 'self.old_game_id')
             self.stdout.write(f"Time before sleep: {time_now}, {self.sleep_cycle}s")
             time.sleep(self.sleep_cycle)

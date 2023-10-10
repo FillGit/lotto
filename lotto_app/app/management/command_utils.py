@@ -146,6 +146,19 @@ class Probabilities8Add(InfoSequence8Add):
                 if sum >= limit
                 }
 
+    def get_exceeding_limit_overlap(self, ng, _id,
+                                    part_consists_of, steps_back_games,
+                                    limit_overlap, gen_probability):
+        _p8add = Probabilities8Add(
+            ng, _id, steps_back_games,
+            game_objs=gen_probability._get_probability_objs(_id, steps_back_games,
+                                                            gen_probability.game_objs)
+        )
+        return _p8add.get_count_sequences(
+            part_consists_of,
+            steps_back_games,
+            limit_overlap), _p8add.game_objs
+
 
 class Probabilities8AddOneNumber():
 
