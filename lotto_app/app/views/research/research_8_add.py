@@ -80,15 +80,15 @@ class Research8AddViewSet(ResearchViewSet):
         for obj in gen_probability.game_objs:
             if int(obj.game_id) > game_end:
                 _id = int(obj.game_id)-1
-                _p8add = Probabilities8Add(
-                    ng, _id, steps_back_games,
-                    game_objs=gen_probability._get_probability_objs(_id, steps_back_games,
-                                                                    gen_probability.game_objs)
+                exceeding_limit_overlap, game_objs = gen_probability.get_exceeding_limit_overlap(
+                    ng, _id,
+                    part_consists_of, steps_back_games,
+                    limit_overlap, gen_probability
                 )
-                exceeding_limit_overlap = _p8add.get_count_sequences(part_consists_of, steps_back_games, limit_overlap)
+
                 if exceeding_limit_overlap and len(exceeding_limit_overlap.keys()) >= limit_amount_seq:
                     probability_sequences[obj.game_id] = {
-                        'ids': [_obj.game_id for _obj in _p8add.game_objs],
+                        'ids': [_obj.game_id for _obj in game_objs],
                         'exceeding_limit_overlap': exceeding_limit_overlap,
                         'numbers_have': [
                             seq for seq in exceeding_limit_overlap
