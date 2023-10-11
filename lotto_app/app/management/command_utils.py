@@ -159,6 +159,16 @@ class Probabilities8Add(InfoSequence8Add):
             steps_back_games,
             limit_overlap), _p8add.game_objs
 
+    def get_comparison_last_game(self, gen_probability):
+        comparison_last_game = {}
+        game_objs = [obj for obj in gen_probability.game_objs]
+        i = 1
+        for _obj in game_objs[:-1]:
+            set_common_numbers = set(_obj.numbers) & set(gen_probability.game_objs[i].numbers)
+            comparison_last_game[_obj.game_id] = len(set_common_numbers)
+            i += 1
+        return comparison_last_game
+
 
 class Probabilities8AddOneNumber():
 

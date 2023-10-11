@@ -127,3 +127,18 @@ class Research8AddViewSet(ResearchViewSet):
             'probability': numbers_have/len(probability_one_number) if len(probability_one_number) > 0 else 0,
         })
         return Response(probability_one_number, status=200)
+
+    @action(detail=True, url_path='comparison_last_game', methods=['get'])
+    def comparison_last_game(self, request, ng, pk=None):
+        game_start = int(pk)
+        how_games = int(request.query_params.get('how_games', 0))
+
+        gen_probability = Probabilities8Add(ng, game_start, how_games)
+        comparison_last_game = gen_probability.get_comparison_last_game(gen_probability)
+        sum_comparison_last_game = {k: 0 for k in range(0, 9)}
+        for k in range(0, 9):
+            for _, same_numbers in comparison_last_game.items():
+                if same_numbers == k:
+                    sum_comparison_last_game[k] += 1
+        comparison_last_game.update(sum_comparison_last_game)
+        return Response(comparison_last_game, status=200)
