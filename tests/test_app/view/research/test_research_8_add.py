@@ -203,6 +203,23 @@ class ProbabilitySequencesTest(WebTest):
                          'numbers_have': 0}))
 
 
+class ComparisonLastGameTest(WebTest):
+    def _get_endpoint(self, game_id):
+        return f'/test_lotto2/research_8_add/{game_id}/comparison_last_game/'
+
+    def test_comparison_last_game(self):
+        get_standart_game_obj([111, 112, 113, 114, 115])
+        params = {'how_games': 5}
+
+        resp = self.app.get(self._get_endpoint(115), params=params)
+        assert_that(resp.json,
+                    is_({'115': 4,
+                         '114': 3,
+                         '113': 0,
+                         '112': 1,
+                         '0': 1, '1': 1, '2': 0, '3': 1, '4': 1, '5': 0, '6': 0, '7': 0, '8': 0}))
+
+
 class ProbabilityOneNumberTest(WebTest):
     def _get_endpoint(self, game_id):
         return f'/test_lotto2/research_8_add/{game_id}/probability_one_number/'
