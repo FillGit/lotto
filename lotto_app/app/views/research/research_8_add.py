@@ -142,3 +142,47 @@ class Research8AddViewSet(ResearchViewSet):
                     sum_comparison_last_game[k] += 1
         comparison_last_game.update(sum_comparison_last_game)
         return Response(comparison_last_game, status=200)
+
+    @action(detail=True, url_path='favorite_option', methods=['get'])
+    def favorite_option(self, request, ng, pk=None):
+        game_start = int(pk)
+        how_games = int(request.query_params.get('how_games'))
+        steps_back_games = int(request.query_params.get('steps_back_games', 0))
+        favorite_option = str(request.query_params.get('favorite_option', ''))
+        values_from_max_list = int(request.query_params.get('values_from_max_list', 2))
+
+        gen_probability = Probabilities8Add(ng, game_start, how_games)
+        count_game_numbers = 0
+        _numbers = [n for n in range(1, gen_probability.numbers_in_lotto + 1)]
+
+        for obj in gen_probability.game_objs:
+            max_numbers_in_games = []
+            if steps_back_games:
+                max_numbers_in_games = gen_probability.get_max_numbers_in_games(ng, int(obj.game_id) - 1,
+                                                                                steps_back_games,
+                                                                                gen_probability)[0:values_from_max_list]
+            if favorite_option:
+                set_future_numbers = set(gen_probability.get_favorite_option(favorite_option,
+                                                                             max_numbers=max_numbers_in_games))
+            else:
+                set_future_numbers = set(gen_probability.get_shuffle_numbers(_numbers, max_numbers_in_games))
+
+            common_numbers = set(obj.numbers) & set_future_numbers
+            print(obj.game_id, len(common_numbers), len(set(obj.numbers) & set(max_numbers_in_games)))
+            if len(common_numbers) >= 5:
+                count_game_numbers += len(common_numbers)
+
+        return Response({'favorite_option': favorite_option,
+                         'count_game_numbers': count_game_numbers},
+                        status=200)
+
+    @action(detail=True, url_path='maximum_numbers_in_games', methods=['get'])
+    def maximum_numbers_in_games(self, request, ng, pk=None):
+        game_start = int(pk)
+        how_games = int(request.query_params.get('how_games'))
+        gen_probability = Probabilities8Add(ng, game_start, how_games)
+        maximum_numbers_in_games = gen_probability.get_max_numbers_in_games(ng, game_start,
+                                                                            how_games,
+                                                                            gen_probability)
+        return Response(maximum_numbers_in_games,
+                        status=200)
