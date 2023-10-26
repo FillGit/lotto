@@ -1,3 +1,4 @@
+from random import shuffle
 from statistics import mean, median
 
 from django.db.models import IntegerField
@@ -168,6 +169,43 @@ class Probabilities8Add(InfoSequence8Add):
             comparison_last_game[_obj.game_id] = len(set_common_numbers)
             i += 1
         return comparison_last_game
+
+    def get_shuffle_numbers(self, numbers, max_numbers=[]):
+        shuffle(numbers)
+        _n = []
+        _n.extend(max_numbers)
+        for n in numbers[0:8]:
+            if len(_n) == 8:
+                break
+            if n not in _n:
+                _n.append(n)
+        return _n
+
+    def get_favorite_option(self, favorite_option, _numbers=None, max_numbers=[]):
+        if not _numbers:
+            _numbers = [n for n in range(1, self.numbers_in_lotto + 1)]
+        for i in range(300):
+            random_numbers = self.get_shuffle_numbers(_numbers, max_numbers)
+            sort_numbers = self._get_combination_options_8_add(random_numbers)
+            if sort_numbers == COMBINATION_OPTIONS_8_ADD[favorite_option]:
+                break
+        return random_numbers
+
+    def get_max_numbers_in_games(self, ng, _id, steps_back_games, gen_probability):
+        _p8add = Probabilities8Add(
+            ng, _id, steps_back_games,
+            game_objs=gen_probability._get_probability_objs(_id, steps_back_games,
+                                                            gen_probability.game_objs)
+        )
+        _all_numbers = []
+        for _obj in _p8add.game_objs:
+            _all_numbers.extend(_obj.numbers)
+        _count_numbers = {i: 0 for i in range(1, gen_probability.numbers_in_lotto + 1)}
+        for num in _all_numbers:
+            _count_numbers[num] += 1
+        return [i for i in dict((x, y) for x, y in sorted(_count_numbers.items(),
+                                                          key=lambda x: x[1],
+                                                          reverse=True))]
 
 
 class Probabilities8AddOneNumber():
