@@ -297,3 +297,33 @@ class ProbabilityOneNumberTest(WebTest):
                   }
         assert_that(calling(self.app.get).with_args(self._get_endpoint(5), params=params),
                     raises(AppError))
+
+
+class FavoriteOptionTest(WebTest):
+    def _get_endpoint(self, game_id):
+        return f'/test_lotto2/research_8_add/{game_id}/favorite_option/'
+
+    def test_happy_path_favorite_option(self):
+        get_standart_game_obj()
+        params = {'how_games': 5,
+                  'favorite_option': '4, 2, 1, 1',
+                  'steps_back_games': 2
+                  }
+
+        resp = self.app.get(self._get_endpoint(5), params=params)
+        assert_that(list(resp.json.keys()), is_(['favorite_option', 'count_game_numbers']))
+        assert_that(resp.json['favorite_option'], is_('4, 2, 1, 1'))
+
+
+class MaximumNumbersInGamesTest(WebTest):
+    def _get_endpoint(self, game_id):
+        return f'/test_lotto2/research_8_add/{game_id}/maximum_numbers_in_games/'
+
+    def test_happy_path_maximum_numbers_in_games(self):
+        get_standart_game_obj()
+        params = {'how_games': 5}
+
+        resp = self.app.get(self._get_endpoint(5), params=params)
+        assert_that(resp.json, is_([2, 3, 5, 10, 13, 20, 4, 6, 8,
+                                    11, 12, 15, 17, 1, 7, 9, 14,
+                                    16, 18, 19]))
