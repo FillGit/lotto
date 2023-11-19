@@ -207,6 +207,52 @@ class Probabilities8Add(InfoSequence8Add):
                                                           key=lambda x: x[1],
                                                           reverse=True))]
 
+    def get_search_needed_combinations(self, name_combination, steps_back_games, steps_back_co):
+        game_combinations = self.get_game_combinations()
+        needed_sequences = []
+        for game_id, combinations in game_combinations.items():
+            if self.will_be_possible_sequence(game_combinations,
+                                              steps_back_games, name_combination, steps_back_co,
+                                              int(game_id)-1):
+                needed_sequences.append({game_id: combinations})
+
+        return needed_sequences
+
+    def _checking_combination_options_8_add(self, name_combination, first_id, steps_back_co, game_combinations):
+        for _id in range(int(first_id), int(first_id)-steps_back_co, -1):
+            if str(_id) not in game_combinations:
+                return True
+            if game_combinations[str(_id)] == COMBINATION_OPTIONS_8_ADD[name_combination]:
+                return True
+        return False
+
+    def will_be_possible_sequence(self, game_combinations,
+                                  steps_back_games, name_combination, steps_back_co, first_id=None):
+        if not first_id:
+            for k, _ in game_combinations:
+                if first_id:
+                    break
+                else:
+                    first_id = k
+
+        a_steps_back_ids = [str(_id) for _id in range(int(first_id), int(first_id)-steps_back_games, -1)]
+        _last_id = str(a_steps_back_ids[-1])
+        if _last_id not in game_combinations:
+            return True
+
+        b_steps_back_ids = [str(_id) for _id in range(int(first_id), int(first_id)-steps_back_games, -1)
+                            if game_combinations[str(_id)][0] >= 3]
+        if a_steps_back_ids != b_steps_back_ids:
+            return False
+
+        if not steps_back_co:
+            steps_back_co = steps_back_games
+
+        if self._checking_combination_options_8_add(name_combination, first_id, steps_back_co,
+                                                    game_combinations):
+            return False
+        return True
+
 
 class Probabilities8AddOneNumber():
 
