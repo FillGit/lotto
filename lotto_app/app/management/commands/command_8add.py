@@ -1,6 +1,6 @@
 import time
 from datetime import datetime, timedelta
-from random import randint, shuffle
+from random import shuffle
 
 import pytz
 import requests
@@ -12,7 +12,7 @@ from django.db.models.functions import Cast
 from lotto_app.app.management.command_utils import CombinationOptions8Add, Probabilities8Add, Probabilities8AddOneNumber
 from lotto_app.app.models import Game
 from lotto_app.app.parsers.choise_parsers import ChoiseParsers
-from lotto_app.app.utils import str_to_list_of_int
+from lotto_app.app.utils import sort_numbers, str_to_list_of_int
 from lotto_app.config import get_from_config
 from lotto_app.constants import COMBINATION_OPTIONS_8_ADD
 
@@ -55,7 +55,6 @@ class Command(BaseCommand):
         self.exclude_one_numbers = []
         self.exclude_two_numbers = []
         self.exclude_three_numbers = []
-        self.preferred_added_number = None
         self.options_last_games = None
         self.max_add_number = int(get_from_config('command_8add', 'max_add_number'))
         self.info_evaluate_future_game = {}
@@ -63,8 +62,6 @@ class Command(BaseCommand):
         self.steps_back_games = {
             '2': int(get_from_config('command_8add', 'two_steps_back_games')),
             '3': int(get_from_config('command_8add', 'three_steps_back_games')),
-            'options_steps_back_games': int(get_from_config('command_8add',
-                                                            'options_steps_back_games')),
             'options_steps_back_co': int(get_from_config('command_8add',
                                                          'options_steps_back_combination_option')),
         }
@@ -183,21 +180,11 @@ class Command(BaseCommand):
                                                self.limit_overlap['3'],
                                                self.limit_amount_seq['3'])
 
-    def _get_preferred_added_number(self):
-        if len({_obj.add_numbers[0]
-                for _obj in self.gen_probability.game_objs[:self.max_add_number]}) == 1:
-            add_numbers = list(set([n for n in range(1, self.max_add_number+1)]) - set(
-                self.gen_probability.game_objs[0].add_numbers))
-            shuffle(add_numbers)
-            return add_numbers[0]
-        return None
-
     def _get_info_evaluate_future_game(self):
         info_evaluate_future_game = {
             'exclude_one_numbers': self.exclude_one_numbers,
             'exclude_two_numbers': self.exclude_two_numbers,
             'exclude_three_numbers': self.exclude_three_numbers,
-            'preferred_added_number': self.preferred_added_number,
             'options_last_games': self.options_last_games,
         }
         print(self.print_info(info_evaluate_future_game))
@@ -235,11 +222,9 @@ class Command(BaseCommand):
         self.exclude_one_numbers = self._get_exclude_one_numbers()
         self.exclude_two_numbers = self._get_exclude_two_numbers()
         self.exclude_three_numbers = self._get_exclude_three_numbers()
-        self.preferred_added_number = self._get_preferred_added_number()
         self.info_evaluate_future_game = self._get_info_evaluate_future_game()
 
-    def _reason_exclude_one_two_numbers(self):
-        list_numbers_have = [v['numbers_have'] for _, v in self.info_evaluate_future_game['update'].items()]
+    def _reason_exclude_one_two_numbers(self, list_numbers_have):
         if self.exclude_two_numbers and self.exclude_one_numbers and (
            len([opt for opt in self.options_last_games[0:4] if opt[0] >= 3]) == 4) and (
                len([numbers_have for numbers_have in list_numbers_have[0:3] if numbers_have]) == 3
@@ -248,8 +233,7 @@ class Command(BaseCommand):
             return True
         return False
 
-    def _reason_exclude_two_numbers_and_options(self):
-        list_numbers_have = [v['numbers_have'] for _, v in self.info_evaluate_future_game['update'].items()]
+    def _reason_exclude_two_numbers_and_options(self, list_numbers_have):
         if self.exclude_two_numbers and self.exclude_one_numbers and (
            len([opt for opt in self.options_last_games
                 if opt != COMBINATION_OPTIONS_8_ADD[self.gen_option]]) == self.steps_back_games['options_steps_back_co']
@@ -258,8 +242,7 @@ class Command(BaseCommand):
             return True
         return False
 
-    def _reason_exclude_three_numbers(self):
-        list_numbers_have = [v['numbers_have'] for _, v in self.info_evaluate_future_game['update'].items()]
+    def _reason_exclude_three_numbers(self, list_numbers_have):
         if self.exclude_three_numbers and self.exclude_two_numbers and self.exclude_one_numbers and (
            len([opt for opt in self.options_last_games
                 if opt != COMBINATION_OPTIONS_8_ADD['3, 2, 1, 1, 1']]) == self.steps_back_games['options_steps_back_co']
@@ -274,8 +257,10 @@ class Command(BaseCommand):
         if self._get_forbidden_circulation():
             self.old_game_id = self.start_game_id
             return False
-        if (self._reason_exclude_one_two_numbers() or self._reason_exclude_two_numbers_and_options() or 
-                self._reason_exclude_three_numbers()):
+        list_numbers_have = [v['numbers_have'] for _, v in self.info_evaluate_future_game['update'].items()]
+        if (self._reason_exclude_one_two_numbers(list_numbers_have) or
+            self._reason_exclude_two_numbers_and_options(list_numbers_have) or
+                self._reason_exclude_three_numbers(list_numbers_have)):
             return True
 
         self.old_game_id = self.start_game_id
@@ -353,15 +338,21 @@ class Command(BaseCommand):
         return False
 
     def _future_add_number(self):
-        if self.preferred_added_number:
-            return self.preferred_added_number
-        if len({_obj.add_numbers[0]
-                for _obj in self.gen_probability.game_objs[:self.max_add_number-1]}) == 1:
-            add_numbers = list(set([n for n in range(1, self.max_add_number+1)]) - set(
-                self.gen_probability.game_objs[0].add_numbers))
-            shuffle(add_numbers)
-            return add_numbers[0]
-        return randint(1, self.max_add_number)
+        steps_back_games = 25
+        _p8add = Probabilities8Add(
+            self.name_game, self.start_game_id, steps_back_games,
+            game_objs=self.gen_probability._get_probability_objs(self.start_game_id,
+                                                                 steps_back_games,
+                                                                 self.gen_probability.game_objs)
+        )
+        list_add_items = [_obj.add_numbers[0] for _obj in _p8add.game_objs]
+        _sort_numbers = sort_numbers(list_add_items, 1, 4, True)
+        if len({_obj.add_numbers[0] for _obj in _p8add.game_objs[:3]}) == 1:
+            return _sort_numbers[0] if _sort_numbers[0] != _p8add.game_objs[0].add_numbers[0] else _sort_numbers[1]
+
+        _a = [_sort_numbers[1], _sort_numbers[2], _sort_numbers[3]]
+        shuffle(_a)
+        return _sort_numbers[0] if list_add_items.count(_sort_numbers[0]) < steps_back_games/2 else _a[0]
 
     def pc_choice_numbers(self):
         _numbers = list(set([n for n in range(1, self.numbers_in_lotto + 1)]) - set(

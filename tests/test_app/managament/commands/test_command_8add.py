@@ -56,16 +56,19 @@ class Command8addCommandTest(WebTest):
         c.exclude_one_numbers = c._get_exclude_one_numbers()
         c.exclude_two_numbers = c._get_exclude_two_numbers()
         c.exclude_three_numbers = c._get_exclude_three_numbers()
-        c.preferred_added_number = c._get_preferred_added_number()
+        c.info_evaluate_future_game = {}
         return c
 
     def test_command_pc_choice_numbers(self):
         c = self.preparation_data()
+        c.info_evaluate_future_game = {
+            'reason_for_choice': 'reason_exclude_three_numbers'
+        }
         pc_choice_numbers = c.pc_choice_numbers()
         assert_that(list(pc_choice_numbers.keys()), is_(['numbers', 'add_number']))
         assert_that(
             c.gen_probability._get_combination_options_8_add(pc_choice_numbers['numbers']),
-            is_([3, 2, 2, 1])
+            is_([3, 2, 1, 1, 1])
         )
 
     def test_comparison_exclude_three_numbers(self):
