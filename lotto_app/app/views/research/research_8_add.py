@@ -198,21 +198,21 @@ class Research8AddViewSet(ResearchViewSet):
         game_start = int(pk)
         how_games = int(request.query_params.get('how_games'))
         name_sequence = str(request.query_params.get('name_sequence'))
-        steps_back_games = int(request.query_params.get('steps_back_games'))
+        steps_back_more_2 = int(request.query_params.get('steps_back_more_2'))
         steps_back_co = int(request.query_params.get('steps_back_combination_option', 0))
         probabilities = Probabilities8Add(ng, game_start, how_games)
         needed_combinations = probabilities.get_search_needed_combinations(name_sequence,
-                                                                           steps_back_games,
+                                                                           steps_back_more_2,
                                                                            steps_back_co)
         len_needed_combinations = len(needed_combinations)
         needed_combinations.append({
             'needed_combinations': len_needed_combinations,
-            'probability_1': self._add_probability(
+            'probability_co': self._add_probability(
                 len_needed_combinations,
                 len([comb for comb in needed_combinations
                      if list(comb.values())[0] == COMBINATION_OPTIONS_8_ADD[name_sequence]]
                     )),
-            'probability_2': self._add_probability(
+            'probability_less_3': self._add_probability(
                 len_needed_combinations,
                 len([comb for comb in needed_combinations
                      if list(comb.values())[0][0] < 3]
