@@ -244,8 +244,8 @@ class Command(BaseCommand):
 
     def _reason_exclude_three_numbers(self, list_numbers_have):
         if self.exclude_three_numbers and self.exclude_two_numbers and self.exclude_one_numbers and (
-           len([opt for opt in self.options_last_games
-                if opt != COMBINATION_OPTIONS_8_ADD['3, 2, 1, 1, 1']]) == self.steps_back_games['options_steps_back_co']
+           len([opt for opt in self.options_last_games[0:4]
+                if opt != COMBINATION_OPTIONS_8_ADD['3, 2, 1, 1, 1']]) == 4
            ) and len([numbers_have for numbers_have in list_numbers_have[0:2] if numbers_have]) == 2:
             self.info_evaluate_future_game['reason_for_choice'] = 'reason_exclude_three_numbers'
             return True
@@ -268,13 +268,10 @@ class Command(BaseCommand):
 
     def _comparison_combination_options(self, future_game_numbers):
         sort_numbers = self.gen_probability._get_combination_options_8_add(future_game_numbers)
-        if sort_numbers == COMBINATION_OPTIONS_8_ADD[self.gen_option] and (
-            self.info_evaluate_future_game['reason_for_choice'] != 'reason_exclude_three_numbers'
-        ):
-            return False
-        if sort_numbers == COMBINATION_OPTIONS_8_ADD['3, 2, 1, 1, 1'] and (
-            self.info_evaluate_future_game['reason_for_choice'] == 'reason_exclude_three_numbers'
-        ):
+        if self.info_evaluate_future_game['reason_for_choice'] == 'reason_exclude_three_numbers':
+            if sort_numbers == COMBINATION_OPTIONS_8_ADD['3, 2, 1, 1, 1']:
+                return False
+        elif sort_numbers == COMBINATION_OPTIONS_8_ADD[self.gen_option]:
             return False
         return True
 
