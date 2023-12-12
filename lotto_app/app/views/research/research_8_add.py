@@ -10,6 +10,7 @@ from lotto_app.app.management.command_utils import (
 )
 from lotto_app.app.utils import str_to_list_of_int
 from lotto_app.app.views.research.research import ResearchViewSet
+from lotto_app.constants import COMBINATION_OPTIONS_8_ADD
 
 
 class Research8AddViewSet(ResearchViewSet):
@@ -186,3 +187,34 @@ class Research8AddViewSet(ResearchViewSet):
                                                                             gen_probability)
         return Response(maximum_numbers_in_games,
                         status=200)
+
+    def _add_probability(self, gen_outcomes, elementary_outcomes):
+        if elementary_outcomes:
+            return elementary_outcomes/gen_outcomes
+        return 0
+
+    @action(detail=True, url_path='search_needed_combinations', methods=['get'])
+    def search_needed_combinations(self, request, ng, pk=None):
+        game_start = int(pk)
+        how_games = int(request.query_params.get('how_games'))
+        name_sequence = str(request.query_params.get('name_sequence'))
+        steps_back_more_2 = int(request.query_params.get('steps_back_more_2'))
+        steps_back_co = int(request.query_params.get('steps_back_combination_option', 0))
+        probabilities = Probabilities8Add(ng, game_start, how_games)
+        needed_combinations = probabilities.get_search_needed_combinations(name_sequence,
+                                                                           steps_back_more_2,
+                                                                           steps_back_co)
+        len_needed_combinations = len(needed_combinations)
+        needed_combinations.append({
+            'needed_combinations': len_needed_combinations,
+            'probability_co': self._add_probability(
+                len_needed_combinations,
+                len([comb for comb in needed_combinations
+                     if list(comb.values())[0] == COMBINATION_OPTIONS_8_ADD[name_sequence]]
+                    )),
+            'probability_less_3': self._add_probability(
+                len_needed_combinations,
+                len([comb for comb in needed_combinations
+                     if list(comb.values())[0][0] < 3]
+                    ))})
+        return Response(needed_combinations, status=200)

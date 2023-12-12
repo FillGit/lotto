@@ -327,3 +327,51 @@ class MaximumNumbersInGamesTest(WebTest):
         assert_that(resp.json, is_([2, 3, 5, 10, 13, 20, 4, 6, 8,
                                     11, 12, 15, 17, 1, 7, 9, 14,
                                     16, 18, 19]))
+
+
+class SearchNeededCombinationsTest(WebTest):
+    def _get_endpoint(self, game_id):
+        return f'/test_lotto2/research_8_add/{game_id}/search_needed_combinations/'
+
+    def test_happy_path_search_needed_combinations_1(self):
+        [GF8As(fields_games=get_fields_games(F8Ns.numbers_1, [1], i)) for i in range(1, 8)]
+        params = {'how_games': 5,
+                  'name_sequence': '2, 2, 1, 1, 1, 1',
+                  'steps_back_more_2': 1,
+                  'steps_back_combination_option': 5}
+
+        resp = self.app.get(self._get_endpoint(7), params=params)
+        assert_that(resp.json, is_([{'3': [3, 2, 2, 1]},
+                                    {'needed_combinations': 1,
+                                     'probability_co': 0,
+                                     'probability_less_3': 0}]))
+
+        params = {'how_games': 6,
+                  'name_sequence': '3, 2, 2, 1',
+                  'steps_back_more_2': 1,
+                  'steps_back_combination_option': 3}
+
+        resp = self.app.get(self._get_endpoint(8), params=params)
+        assert_that(resp.json, is_([{'2': [3, 2, 2, 1]},
+                                    {'needed_combinations': 1,
+                                     'probability_co': 1.0,
+                                     'probability_less_3': 0}]))
+
+    def test_happy_path_search_needed_combinations_2(self):
+        [GF8As(fields_games=get_fields_games(F8Ns.numbers_4, [1], i)) for i in range(1, 3)]
+        [GF8As(fields_games=get_fields_games(F8Ns.numbers_1, [1], i)) for i in range(3, 5)]
+        [GF8As(fields_games=get_fields_games(F8Ns.numbers_4, [1], i)) for i in range(5, 7)]
+        [GF8As(fields_games=get_fields_games(F8Ns.numbers_1, [1], i)) for i in range(7, 9)]
+
+        params = {'how_games': 6,
+                  'name_sequence': '4, 2, 1, 1',
+                  'steps_back_more_2': 1,
+                  'steps_back_combination_option': 2}
+
+        resp = self.app.get(self._get_endpoint(8), params=params)
+        assert_that(resp.json, is_([{'8': [3, 2, 2, 1]},
+                                    {'5': [2, 1, 1, 1, 1, 1, 1]},
+                                    {'3': [3, 2, 2, 1]},
+                                    {'needed_combinations': 3,
+                                     'probability_co': 0,
+                                     'probability_less_3': 0.3333333333333333}]))
