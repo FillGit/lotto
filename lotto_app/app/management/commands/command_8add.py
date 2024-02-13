@@ -181,7 +181,7 @@ class Command(BaseCommand):
                             seq for seq in exceeding_limit_overlap
                             if set(str_to_list_of_int(seq)).issubset(set(obj.numbers))
                         ]}})
-        
+
         self.info_evaluate_future_game['update_two'] = {}
         for obj in self.gen_probability.game_objs:
             if int(obj.game_id) > self.start_game_id-30:
