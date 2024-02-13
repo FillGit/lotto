@@ -9,7 +9,7 @@ from django.core.management.base import BaseCommand
 from django.db.models import IntegerField
 from django.db.models.functions import Cast
 
-from lotto_app.app.management.command_utils import CombinationOptions8Add, Probabilities8Add, Probabilities8AddOneNumber
+from lotto_app.app.management.command_utils import Probabilities8Add
 from lotto_app.app.models import Game
 from lotto_app.app.parsers.choise_parsers import ChoiseParsers
 from lotto_app.app.utils import sort_numbers, str_to_list_of_int
@@ -60,16 +60,19 @@ class Command(BaseCommand):
         self.info_evaluate_future_game = {}
 
         self.steps_back_games = {
+            '1': int(get_from_config('command_8add', 'one_steps_back_games')),
             '2': int(get_from_config('command_8add', 'two_steps_back_games')),
             '3': int(get_from_config('command_8add', 'three_steps_back_games')),
             'options_steps_back_co': int(get_from_config('command_8add',
                                                          'options_steps_back_combination_option')),
         }
         self.limit_overlap = {
+            '1': int(get_from_config('command_8add', 'one_limit_overlap')),
             '2': int(get_from_config('command_8add', 'two_limit_overlap')),
             '3': int(get_from_config('command_8add', 'three_limit_overlap'))
         }
         self.limit_amount_seq = {
+            '1': int(get_from_config('command_8add', 'one_limit_amount_seq')),
             '2': int(get_from_config('command_8add', 'two_limit_amount_seq')),
             '3': int(get_from_config('command_8add', 'three_limit_amount_seq'))
         }
@@ -122,42 +125,6 @@ class Command(BaseCommand):
             return True, 300
         return False, (time_15 - time_now).total_seconds()+120
 
-    def _get_forbidden_circulation(self):
-        forbidden_circulation_how_games = int(
-            get_from_config('command_8add', 'forbidden_circulation_how_games'))
-        combination_options = CombinationOptions8Add(
-            self.name_game,
-            self.start_game_id,
-            forbidden_circulation_how_games)
-        game_combinations = combination_options.get_game_combinations()
-        game_combinations.update(combination_options.get_sum_combination_options(game_combinations))
-        if self.gen_option in game_combinations and game_combinations[self.gen_option] == forbidden_circulation_how_games:
-            print('forbidden_circulation')
-            return True
-        return False
-
-    def _get_exclude_one_numbers(self):
-        one_number_factors = get_one_number_factors()
-        set_exclude_one_numbers = set()
-        previous_id = int(self.gen_probability.game_objs[0].game_id)
-        for fs in one_number_factors:
-            steps_back_games_previous = fs['steps_back_games_previous']
-            steps_back_games_small = fs['steps_back_games_small']
-            steps_back_games_big = fs['steps_back_games_big']
-
-            _, set_one_numbers = Probabilities8AddOneNumber().get_probability_one_number(
-                self.name_game, previous_id,
-                steps_back_games_previous,
-                steps_back_games_small,
-                steps_back_games_big,
-                self.gen_probability
-            )
-            if set_one_numbers:
-                set_exclude_one_numbers.update(set_one_numbers)
-
-        exclude_one_numbers = list(set_exclude_one_numbers)
-        return exclude_one_numbers
-
     def _get_exclude_group_numbers(self, part_consists_of, steps_back_games,
                                    limit_overlap, limit_amount_seq):
         exceeding_limit_overlap, _ = self.gen_probability.get_exceeding_limit_overlap(
@@ -167,6 +134,12 @@ class Command(BaseCommand):
         )
         return [str_to_list_of_int(seq) for seq in exceeding_limit_overlap] if exceeding_limit_overlap and len(
             exceeding_limit_overlap.keys()) >= limit_amount_seq else []
+
+    def _get_exclude_one_numbers(self):
+        return self._get_exclude_group_numbers(1,
+                                               self.steps_back_games['1'],
+                                               self.limit_overlap['1'],
+                                               self.limit_amount_seq['1'])
 
     def _get_exclude_two_numbers(self):
         return self._get_exclude_group_numbers(2,
@@ -191,9 +164,27 @@ class Command(BaseCommand):
         return info_evaluate_future_game
 
     def _update_info_evaluate_future_game(self):
-        self.info_evaluate_future_game['update'] = {}
+        self.info_evaluate_future_game['update_one'] = {}
         for obj in self.gen_probability.game_objs:
-            if int(obj.game_id) > self.start_game_id-25:
+            if int(obj.game_id) > self.start_game_id-30:
+                _id = int(obj.game_id)-1
+                exceeding_limit_overlap, game_objs = self.gen_probability.get_exceeding_limit_overlap(
+                    self.name_game, _id,
+                    1, self.steps_back_games['1'],
+                    self.limit_overlap['1'], self.gen_probability
+                )
+
+                if exceeding_limit_overlap and len(exceeding_limit_overlap.keys()) >= self.limit_amount_seq['1']:
+                    self.info_evaluate_future_game['update_one'].update({obj.game_id: {
+                        'exceeding_limit_overlap': exceeding_limit_overlap,
+                        'numbers_have': [
+                            seq for seq in exceeding_limit_overlap
+                            if set(str_to_list_of_int(seq)).issubset(set(obj.numbers))
+                        ]}})
+        
+        self.info_evaluate_future_game['update_two'] = {}
+        for obj in self.gen_probability.game_objs:
+            if int(obj.game_id) > self.start_game_id-30:
                 _id = int(obj.game_id)-1
                 exceeding_limit_overlap, game_objs = self.gen_probability.get_exceeding_limit_overlap(
                     self.name_game, _id,
@@ -202,7 +193,7 @@ class Command(BaseCommand):
                 )
 
                 if exceeding_limit_overlap and len(exceeding_limit_overlap.keys()) >= self.limit_amount_seq['2']:
-                    self.info_evaluate_future_game['update'].update({obj.game_id: {
+                    self.info_evaluate_future_game['update_two'].update({obj.game_id: {
                         'exceeding_limit_overlap': exceeding_limit_overlap,
                         'numbers_have': [
                             seq for seq in exceeding_limit_overlap
@@ -224,29 +215,24 @@ class Command(BaseCommand):
         self.exclude_three_numbers = self._get_exclude_three_numbers()
         self.info_evaluate_future_game = self._get_info_evaluate_future_game()
 
-    def _reason_exclude_one_two_numbers(self, list_numbers_have):
-        if self.exclude_two_numbers and self.exclude_one_numbers and (
-           len([opt for opt in self.options_last_games[0:4] if opt[0] >= 3]) == 4) and (
-               len([numbers_have for numbers_have in list_numbers_have[0:3] if numbers_have]) == 3
-        ):
-            self.info_evaluate_future_game['reason_for_choice'] = 'reason_exclude_one_two_numbers'
-            return True
-        return False
-
-    def _reason_exclude_two_numbers_and_options(self, list_numbers_have):
+    def _reason_exclude_two_numbers_and_options(self, list_have_one, list_have_two):
         if self.exclude_two_numbers and self.exclude_one_numbers and (
            len([opt for opt in self.options_last_games
                 if opt != COMBINATION_OPTIONS_8_ADD[self.gen_option]]) == self.steps_back_games['options_steps_back_co']
-           ) and len([numbers_have for numbers_have in list_numbers_have[0:2] if numbers_have]) == 2:
+           ) and len([numbers_have for numbers_have in list_have_two[0:2] if numbers_have]) == 2 and (
+               len([numbers_have for numbers_have in list_have_one[0:3] if numbers_have]) == 3
+           ):
             self.info_evaluate_future_game['reason_for_choice'] = 'reason_exclude_two_numbers_and_options'
             return True
         return False
 
-    def _reason_exclude_three_numbers(self, list_numbers_have):
+    def _reason_exclude_three_numbers(self, list_have_one, list_have_two):
         if self.exclude_three_numbers and self.exclude_two_numbers and self.exclude_one_numbers and (
            len([opt for opt in self.options_last_games[0:4]
                 if opt != COMBINATION_OPTIONS_8_ADD['3, 2, 1, 1, 1']]) == 4
-           ) and len([numbers_have for numbers_have in list_numbers_have[0:2] if numbers_have]) == 2:
+           ) and len([numbers_have for numbers_have in list_have_two[0:2] if numbers_have]) == 2 and (
+               len([numbers_have for numbers_have in list_have_one[0:3] if numbers_have]) == 3
+           ):
             self.info_evaluate_future_game['reason_for_choice'] = 'reason_exclude_three_numbers'
             return True
         return False
@@ -254,13 +240,12 @@ class Command(BaseCommand):
     def evaluate_future_game(self):
         self._init_future_game()
         self._update_info_evaluate_future_game()
-        if self._get_forbidden_circulation():
-            self.old_game_id = self.start_game_id
-            return False
-        list_numbers_have = [v['numbers_have'] for _, v in self.info_evaluate_future_game['update'].items()]
-        if (self._reason_exclude_one_two_numbers(list_numbers_have) or
-            self._reason_exclude_two_numbers_and_options(list_numbers_have) or
-                self._reason_exclude_three_numbers(list_numbers_have)):
+        list_have_one = [v['numbers_have'] for _, v in self.info_evaluate_future_game['update_one'].items()]
+        list_have_two = [v['numbers_have'] for _, v in self.info_evaluate_future_game['update_two'].items()]
+        print('list_have_one', list_have_one)
+        print('list_have_two', list_have_two)
+        if (self._reason_exclude_two_numbers_and_options(list_have_one, list_have_two) or
+                self._reason_exclude_three_numbers(list_have_one, list_have_two)):
             return True
 
         self.old_game_id = self.start_game_id
@@ -327,13 +312,6 @@ class Command(BaseCommand):
                 return True
         return False
 
-    def _comparison_maximum_numbers_in_games(self, future_game_numbers):
-        _max_numbers = self.gen_probability.get_max_numbers_in_games(
-            self.name_game, self.start_game_id, 25, self.gen_probability)
-        if (_max_numbers[0] not in future_game_numbers) and (_max_numbers[1] in future_game_numbers):
-            return True
-        return False
-
     def _future_add_number(self):
         steps_back_games = 25
         _p8add = Probabilities8Add(
@@ -352,8 +330,8 @@ class Command(BaseCommand):
         return _sort_numbers[0] if list_add_items.count(_sort_numbers[0]) < steps_back_games/2 else _a[0]
 
     def pc_choice_numbers(self):
-        _numbers = list(set([n for n in range(1, self.numbers_in_lotto + 1)]) - set(
-            self.exclude_one_numbers))
+        _eons = [i[0] for i in self.exclude_one_numbers]
+        _numbers = list(set([n for n in range(1, self.numbers_in_lotto + 1)]) - set(_eons))
         future_game_numbers = None
         current_game_numbers = self.gen_probability.game_objs[0].numbers
         for i in range(3000):
@@ -368,8 +346,6 @@ class Command(BaseCommand):
             if self._comparison_exclude_three_numbers(future_game_numbers, self.exclude_three_numbers):
                 continue
             if self._comparison_all_game_numbers(future_game_numbers):
-                continue
-            if self._comparison_maximum_numbers_in_games(future_game_numbers):
                 continue
             break
 
@@ -394,7 +370,8 @@ class Command(BaseCommand):
             force_sleep, self.sleep_cycle = self.get_sleep_cycle(time_now, resp_command)
             if not force_sleep and self.evaluate_future_game():
                 choice_numbers = self.pc_choice_numbers()
-                print(self.print_info(self.info_evaluate_future_game['update']))
+                print(self.print_info(self.info_evaluate_future_game['update_one']))
+                print(self.print_info(self.info_evaluate_future_game['update_two']))
                 print(self.info_evaluate_future_game['reason_for_choice'])
                 send_mail(
                     f'choice_numbers: {self.start_game_id + 1}',
