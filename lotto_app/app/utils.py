@@ -118,10 +118,6 @@ def shuffle_numbers(set_exist_numbers=None, numbers_in_lotto=90):
     return minus_numbers
 
 
-def str_to_list_of_int(s_str):
-    return [int(i) for i in s_str.replace('[', '').replace(']', '').replace(' ', '').split(',')]
-
-
 def sort_numbers(list_items, min, max, reverse=False, _dict=False):
     _count_numbers = {n: list_items.count(n) for n in range(min, max+1)}
     if _dict:
