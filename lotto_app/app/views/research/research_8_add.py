@@ -1,3 +1,5 @@
+import json
+
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -8,7 +10,6 @@ from lotto_app.app.management.command_utils import (
     Probabilities8Add,
     Probabilities8AddOneNumber
 )
-from lotto_app.app.utils import str_to_list_of_int
 from lotto_app.app.views.research.research import ResearchViewSet
 from lotto_app.constants import COMBINATION_OPTIONS_8_ADD
 
@@ -93,7 +94,7 @@ class Research8AddViewSet(ResearchViewSet):
                         'exceeding_limit_overlap': exceeding_limit_overlap,
                         'numbers_have': [
                             seq for seq in exceeding_limit_overlap
-                            if set(str_to_list_of_int(seq)).issubset(set(obj.numbers))
+                            if set(json.loads(seq)).issubset(set(obj.numbers))
                         ]}
 
         probability_sequences.update({

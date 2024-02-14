@@ -1,3 +1,4 @@
+import json
 import time
 from datetime import datetime, timedelta
 from random import shuffle
@@ -12,7 +13,7 @@ from django.db.models.functions import Cast
 from lotto_app.app.management.command_utils import Probabilities8Add
 from lotto_app.app.models import Game
 from lotto_app.app.parsers.choise_parsers import ChoiseParsers
-from lotto_app.app.utils import sort_numbers, str_to_list_of_int
+from lotto_app.app.utils import sort_numbers
 from lotto_app.config import get_from_config
 from lotto_app.constants import COMBINATION_OPTIONS_8_ADD
 
@@ -132,7 +133,7 @@ class Command(BaseCommand):
             part_consists_of, steps_back_games,
             limit_overlap, self.gen_probability
         )
-        return [str_to_list_of_int(seq) for seq in exceeding_limit_overlap] if exceeding_limit_overlap and len(
+        return [json.loads(seq) for seq in exceeding_limit_overlap] if exceeding_limit_overlap and len(
             exceeding_limit_overlap.keys()) >= limit_amount_seq else []
 
     def _get_exclude_one_numbers(self):
@@ -179,9 +180,9 @@ class Command(BaseCommand):
                         'exceeding_limit_overlap': exceeding_limit_overlap,
                         'numbers_have': [
                             seq for seq in exceeding_limit_overlap
-                            if set(str_to_list_of_int(seq)).issubset(set(obj.numbers))
+                            if set(json.loads(seq)).issubset(set(obj.numbers))
                         ]}})
-        
+
         self.info_evaluate_future_game['update_two'] = {}
         for obj in self.gen_probability.game_objs:
             if int(obj.game_id) > self.start_game_id-30:
@@ -197,7 +198,7 @@ class Command(BaseCommand):
                         'exceeding_limit_overlap': exceeding_limit_overlap,
                         'numbers_have': [
                             seq for seq in exceeding_limit_overlap
-                            if set(str_to_list_of_int(seq)).issubset(set(obj.numbers))
+                            if set(json.loads(seq)).issubset(set(obj.numbers))
                         ]}})
 
     def _init_future_game(self):

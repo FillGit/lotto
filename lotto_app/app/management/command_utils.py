@@ -1,3 +1,4 @@
+import json
 from random import shuffle
 from statistics import mean, median
 
@@ -6,7 +7,6 @@ from django.db.models.functions import Cast
 from webtest.app import AppError
 
 from lotto_app.app.models import Game
-from lotto_app.app.utils import str_to_list_of_int
 from lotto_app.config import get_from_config
 from lotto_app.constants import COMBINATION_OPTIONS_8_ADD
 
@@ -272,7 +272,7 @@ class Probabilities8AddOneNumber():
         list_repeat = []
         for str_number, sum in i_s.get_all_sequences_in_games(1, steps_back_games).items():
             if sum == steps_back_games:
-                list_repeat.extend(str_to_list_of_int(str_number))
+                list_repeat.extend(json.loads(str_number))
         return list_repeat
 
     def get_set_one_numbers_by_previous(self, ng, previous_id,
