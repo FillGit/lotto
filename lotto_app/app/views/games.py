@@ -47,8 +47,8 @@ class GameViewSet(viewsets.ModelViewSet):
             all_cost_numbers[num] = sum(
                 [all_info[i]['cost_numbers'][num] for i in range(0, amount_games)])
 
-        total_cost_numbers = dict((x, y) for x, y in sorted(all_cost_numbers.items(),
-                                                            key=lambda x: x[1]))
+        total_cost_numbers = dict(sorted(all_cost_numbers.items(),
+                                         key=lambda x: x[1]))
         str_total_cost_numbers = [{k: y} for k, y in total_cost_numbers.items()]
         return {
             'min_cost': str_total_cost_numbers[0],

@@ -84,7 +84,7 @@ def index_9_parts(cost_numbers, bingo):
             sum_9_parts[nominal] = 0
         sum_9_parts[nominal] += 1
 
-    return dict((x, y) for x, y in sorted(sum_9_parts.items(), key=lambda x: x[0]))
+    return dict(sorted(sum_9_parts.items(), key=lambda x: x[0]))
 
 
 def get_9_parts_numbers(sorted_cost_numbers):
@@ -121,8 +121,6 @@ def shuffle_numbers(set_exist_numbers=None, numbers_in_lotto=90):
 def sort_numbers(list_items, min, max, reverse=False, _dict=False):
     _count_numbers = {n: list_items.count(n) for n in range(min, max+1)}
     if _dict:
-        return dict(
-            (x, y) for x, y in sorted(_count_numbers.items(), key=lambda x: x[1], reverse=reverse))
+        return dict(sorted(_count_numbers.items(), key=lambda x: x[1], reverse=reverse))
 
-    return [n for n in dict(
-        (x, y) for x, y in sorted(_count_numbers.items(), key=lambda x: x[1], reverse=reverse))]
+    return [n for n in dict(sorted(_count_numbers.items(), key=lambda x: x[1], reverse=reverse))]
