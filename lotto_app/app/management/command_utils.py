@@ -203,9 +203,9 @@ class Probabilities8Add(InfoSequence8Add):
         _count_numbers = {i: 0 for i in range(1, gen_probability.numbers_in_lotto + 1)}
         for num in _all_numbers:
             _count_numbers[num] += 1
-        return [i for i in dict((x, y) for x, y in sorted(_count_numbers.items(),
-                                                          key=lambda x: x[1],
-                                                          reverse=True))]
+        return [i for i in dict(sorted(_count_numbers.items(),
+                                       key=lambda x: x[1],
+                                       reverse=True))]
 
     def get_search_needed_combinations(self, name_combination, steps_back_more_2, steps_back_co):
         game_combinations = self.get_game_combinations()
