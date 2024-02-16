@@ -18,20 +18,6 @@ from lotto_app.config import get_from_config
 from lotto_app.constants import COMBINATION_OPTIONS_8_ADD
 
 
-def get_one_number_factors():
-    draft_list = get_from_config('command_8add', 'one_number_factors').split('] [')
-    one_number_factors = []
-    for s in draft_list:
-        factors = str(s).replace(' ', '').replace('[', '').replace(']', '').split(',')
-        one_number_factors.append(
-            {
-                'steps_back_games_previous': int(factors[0]),
-                'steps_back_games_small': int(factors[1]),
-                'steps_back_games_big': int(factors[2])
-            })
-    return one_number_factors
-
-
 class Command(BaseCommand):
     SEND_EMAIL = get_from_config('send_email', 'send_email')
     EMAIL_HOST_USER = get_from_config('send_email', 'email_host_user')
@@ -164,42 +150,28 @@ class Command(BaseCommand):
         print(self.print_info(info_evaluate_future_game))
         return info_evaluate_future_game
 
+    def _update_n(self, n):
+        self.info_evaluate_future_game[f'update_{n}'] = {}
+        for obj in self.gen_probability.game_objs:
+            if int(obj.game_id) > self.start_game_id-30:
+                _id = int(obj.game_id)-1
+                exceeding_limit_overlap, game_objs = self.gen_probability.get_exceeding_limit_overlap(
+                    self.name_game, _id,
+                    1, self.steps_back_games[n],
+                    self.limit_overlap[n], self.gen_probability
+                )
+
+                if exceeding_limit_overlap and len(exceeding_limit_overlap.keys()) >= self.limit_amount_seq[n]:
+                    self.info_evaluate_future_game[f'update_{n}'].update({obj.game_id: {
+                        'exceeding_limit_overlap': exceeding_limit_overlap,
+                        'numbers_have': [
+                            seq for seq in exceeding_limit_overlap
+                            if set(json.loads(seq)).issubset(set(obj.numbers))
+                        ]}})
+
     def _update_info_evaluate_future_game(self):
-        self.info_evaluate_future_game['update_one'] = {}
-        for obj in self.gen_probability.game_objs:
-            if int(obj.game_id) > self.start_game_id-30:
-                _id = int(obj.game_id)-1
-                exceeding_limit_overlap, game_objs = self.gen_probability.get_exceeding_limit_overlap(
-                    self.name_game, _id,
-                    1, self.steps_back_games['1'],
-                    self.limit_overlap['1'], self.gen_probability
-                )
-
-                if exceeding_limit_overlap and len(exceeding_limit_overlap.keys()) >= self.limit_amount_seq['1']:
-                    self.info_evaluate_future_game['update_one'].update({obj.game_id: {
-                        'exceeding_limit_overlap': exceeding_limit_overlap,
-                        'numbers_have': [
-                            seq for seq in exceeding_limit_overlap
-                            if set(json.loads(seq)).issubset(set(obj.numbers))
-                        ]}})
-
-        self.info_evaluate_future_game['update_two'] = {}
-        for obj in self.gen_probability.game_objs:
-            if int(obj.game_id) > self.start_game_id-30:
-                _id = int(obj.game_id)-1
-                exceeding_limit_overlap, game_objs = self.gen_probability.get_exceeding_limit_overlap(
-                    self.name_game, _id,
-                    2, self.steps_back_games['2'],
-                    self.limit_overlap['2'], self.gen_probability
-                )
-
-                if exceeding_limit_overlap and len(exceeding_limit_overlap.keys()) >= self.limit_amount_seq['2']:
-                    self.info_evaluate_future_game['update_two'].update({obj.game_id: {
-                        'exceeding_limit_overlap': exceeding_limit_overlap,
-                        'numbers_have': [
-                            seq for seq in exceeding_limit_overlap
-                            if set(json.loads(seq)).issubset(set(obj.numbers))
-                        ]}})
+        self._update_n('1')
+        self._update_n('2')
 
     def _init_future_game(self):
         self.start_game_id = int(self._get_start_game_id())
@@ -241,8 +213,8 @@ class Command(BaseCommand):
     def evaluate_future_game(self):
         self._init_future_game()
         self._update_info_evaluate_future_game()
-        list_have_one = [v['numbers_have'] for _, v in self.info_evaluate_future_game['update_one'].items()]
-        list_have_two = [v['numbers_have'] for _, v in self.info_evaluate_future_game['update_two'].items()]
+        list_have_one = [v['numbers_have'] for _, v in self.info_evaluate_future_game['update_1'].items()]
+        list_have_two = [v['numbers_have'] for _, v in self.info_evaluate_future_game['update_2'].items()]
         print('list_have_one', list_have_one)
         print('list_have_two', list_have_two)
         if (self._reason_exclude_two_numbers_and_options(list_have_one, list_have_two) or
