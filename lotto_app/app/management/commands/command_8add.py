@@ -7,8 +7,6 @@ import pytz
 import requests
 from django.core.mail import send_mail
 from django.core.management.base import BaseCommand
-from django.db.models import IntegerField
-from django.db.models.functions import Cast
 
 from lotto_app.app.management.command_utils import Probabilities8Add
 from lotto_app.app.models import Game
@@ -16,20 +14,6 @@ from lotto_app.app.parsers.choise_parsers import ChoiseParsers
 from lotto_app.app.utils import sort_numbers
 from lotto_app.config import get_from_config
 from lotto_app.constants import COMBINATION_OPTIONS_8_ADD
-
-
-def get_one_number_factors():
-    draft_list = get_from_config('command_8add', 'one_number_factors').split('] [')
-    one_number_factors = []
-    for s in draft_list:
-        factors = str(s).replace(' ', '').replace('[', '').replace(']', '').split(',')
-        one_number_factors.append(
-            {
-                'steps_back_games_previous': int(factors[0]),
-                'steps_back_games_small': int(factors[1]),
-                'steps_back_games_big': int(factors[2])
-            })
-    return one_number_factors
 
 
 class Command(BaseCommand):
@@ -61,28 +45,27 @@ class Command(BaseCommand):
         self.info_evaluate_future_game = {}
 
         self.steps_back_games = {
-            '1': int(get_from_config('command_8add', 'one_steps_back_games')),
-            '2': int(get_from_config('command_8add', 'two_steps_back_games')),
-            '3': int(get_from_config('command_8add', 'three_steps_back_games')),
+            1: int(get_from_config('command_8add', 'one_steps_back_games')),
+            2: int(get_from_config('command_8add', 'two_steps_back_games')),
+            3: int(get_from_config('command_8add', 'three_steps_back_games')),
             'options_steps_back_co': int(get_from_config('command_8add',
                                                          'options_steps_back_combination_option')),
         }
         self.limit_overlap = {
-            '1': int(get_from_config('command_8add', 'one_limit_overlap')),
-            '2': int(get_from_config('command_8add', 'two_limit_overlap')),
-            '3': int(get_from_config('command_8add', 'three_limit_overlap'))
+            1: int(get_from_config('command_8add', 'one_limit_overlap')),
+            2: int(get_from_config('command_8add', 'two_limit_overlap')),
+            3: int(get_from_config('command_8add', 'three_limit_overlap'))
         }
         self.limit_amount_seq = {
-            '1': int(get_from_config('command_8add', 'one_limit_amount_seq')),
-            '2': int(get_from_config('command_8add', 'two_limit_amount_seq')),
-            '3': int(get_from_config('command_8add', 'three_limit_amount_seq'))
+            1: int(get_from_config('command_8add', 'one_limit_amount_seq')),
+            2: int(get_from_config('command_8add', 'two_limit_amount_seq')),
+            3: int(get_from_config('command_8add', 'three_limit_amount_seq'))
         }
         self.stdout.write(f"Name game: {self.name_game}")
         self.stdout.write(f"cycle_range: {self.cycle_range}")
 
     def _get_start_game_id(self):
-        return Game.objects.filter(name_game=self.name_game).annotate(
-            game_id_int=Cast('game_id', output_field=IntegerField())).last().game_id
+        return Game.objects.filter(name_game=self.name_game).latest('game_id').game_id
 
     def _get_resp_command(self):
         class_parser = ChoiseParsers(f'{self.name_game}_command', '').get_class_parser()
@@ -103,6 +86,7 @@ class Command(BaseCommand):
             return resp_command
 
         if int(resp_command['game_id']) > int(self.old_game_id)+1:
+            print(int(self.old_game_id))
             self.stdout.write('name_game/parsers/parsers_mult_pages/')
             requests.post(f'{self.my_host}/{self.name_game}/parsers/parsers_mult_pages/',
                           json={
@@ -138,21 +122,21 @@ class Command(BaseCommand):
 
     def _get_exclude_one_numbers(self):
         return self._get_exclude_group_numbers(1,
-                                               self.steps_back_games['1'],
-                                               self.limit_overlap['1'],
-                                               self.limit_amount_seq['1'])
+                                               self.steps_back_games[1],
+                                               self.limit_overlap[1],
+                                               self.limit_amount_seq[1])
 
     def _get_exclude_two_numbers(self):
         return self._get_exclude_group_numbers(2,
-                                               self.steps_back_games['2'],
-                                               self.limit_overlap['2'],
-                                               self.limit_amount_seq['2'])
+                                               self.steps_back_games[2],
+                                               self.limit_overlap[2],
+                                               self.limit_amount_seq[2])
 
     def _get_exclude_three_numbers(self):
         return self._get_exclude_group_numbers(3,
-                                               self.steps_back_games['3'],
-                                               self.limit_overlap['3'],
-                                               self.limit_amount_seq['3'])
+                                               self.steps_back_games[3],
+                                               self.limit_overlap[3],
+                                               self.limit_amount_seq[3])
 
     def _get_info_evaluate_future_game(self):
         info_evaluate_future_game = {
@@ -164,42 +148,28 @@ class Command(BaseCommand):
         print(self.print_info(info_evaluate_future_game))
         return info_evaluate_future_game
 
+    def _update_n(self, n):
+        self.info_evaluate_future_game[f'update_{n}'] = {}
+        for obj in self.gen_probability.game_objs:
+            if int(obj.game_id) > self.start_game_id-30:
+                _id = int(obj.game_id)-1
+                exceeding_limit_overlap, game_objs = self.gen_probability.get_exceeding_limit_overlap(
+                    self.name_game, _id,
+                    n, self.steps_back_games[n],
+                    self.limit_overlap[n], self.gen_probability
+                )
+
+                if exceeding_limit_overlap and len(exceeding_limit_overlap.keys()) >= self.limit_amount_seq[n]:
+                    self.info_evaluate_future_game[f'update_{n}'].update({obj.game_id: {
+                        'exceeding_limit_overlap': exceeding_limit_overlap,
+                        'numbers_have': [
+                            seq for seq in exceeding_limit_overlap
+                            if set(json.loads(seq)).issubset(set(obj.numbers))
+                        ]}})
+
     def _update_info_evaluate_future_game(self):
-        self.info_evaluate_future_game['update_one'] = {}
-        for obj in self.gen_probability.game_objs:
-            if int(obj.game_id) > self.start_game_id-30:
-                _id = int(obj.game_id)-1
-                exceeding_limit_overlap, game_objs = self.gen_probability.get_exceeding_limit_overlap(
-                    self.name_game, _id,
-                    1, self.steps_back_games['1'],
-                    self.limit_overlap['1'], self.gen_probability
-                )
-
-                if exceeding_limit_overlap and len(exceeding_limit_overlap.keys()) >= self.limit_amount_seq['1']:
-                    self.info_evaluate_future_game['update_one'].update({obj.game_id: {
-                        'exceeding_limit_overlap': exceeding_limit_overlap,
-                        'numbers_have': [
-                            seq for seq in exceeding_limit_overlap
-                            if set(json.loads(seq)).issubset(set(obj.numbers))
-                        ]}})
-
-        self.info_evaluate_future_game['update_two'] = {}
-        for obj in self.gen_probability.game_objs:
-            if int(obj.game_id) > self.start_game_id-30:
-                _id = int(obj.game_id)-1
-                exceeding_limit_overlap, game_objs = self.gen_probability.get_exceeding_limit_overlap(
-                    self.name_game, _id,
-                    2, self.steps_back_games['2'],
-                    self.limit_overlap['2'], self.gen_probability
-                )
-
-                if exceeding_limit_overlap and len(exceeding_limit_overlap.keys()) >= self.limit_amount_seq['2']:
-                    self.info_evaluate_future_game['update_two'].update({obj.game_id: {
-                        'exceeding_limit_overlap': exceeding_limit_overlap,
-                        'numbers_have': [
-                            seq for seq in exceeding_limit_overlap
-                            if set(json.loads(seq)).issubset(set(obj.numbers))
-                        ]}})
+        self._update_n(1)
+        self._update_n(2)
 
     def _init_future_game(self):
         self.start_game_id = int(self._get_start_game_id())
@@ -241,8 +211,8 @@ class Command(BaseCommand):
     def evaluate_future_game(self):
         self._init_future_game()
         self._update_info_evaluate_future_game()
-        list_have_one = [v['numbers_have'] for _, v in self.info_evaluate_future_game['update_one'].items()]
-        list_have_two = [v['numbers_have'] for _, v in self.info_evaluate_future_game['update_two'].items()]
+        list_have_one = [v['numbers_have'] for _, v in self.info_evaluate_future_game['update_1'].items()]
+        list_have_two = [v['numbers_have'] for _, v in self.info_evaluate_future_game['update_2'].items()]
         print('list_have_one', list_have_one)
         print('list_have_two', list_have_two)
         if (self._reason_exclude_two_numbers_and_options(list_have_one, list_have_two) or
