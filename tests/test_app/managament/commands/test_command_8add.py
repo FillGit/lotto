@@ -41,19 +41,19 @@ class Command8addCommandTest(WebTest):
                                               100)
         c.max_add_number = 5
         c.steps_back_games = {
-            '1': int(get_from_config('command_8add', 'one_steps_back_games')),
-            '2': int(get_from_config('command_8add', 'two_steps_back_games')),
-            '3': int(get_from_config('command_8add', 'three_steps_back_games'))
+            1: int(get_from_config('command_8add', 'one_steps_back_games')),
+            2: int(get_from_config('command_8add', 'two_steps_back_games')),
+            3: int(get_from_config('command_8add', 'three_steps_back_games'))
         }
         c.limit_overlap = {
-            '1': int(get_from_config('command_8add', 'one_limit_overlap')),
-            '2': int(get_from_config('command_8add', 'two_limit_overlap')),
-            '3': int(get_from_config('command_8add', 'three_limit_overlap'))
+            1: int(get_from_config('command_8add', 'one_limit_overlap')),
+            2: int(get_from_config('command_8add', 'two_limit_overlap')),
+            3: int(get_from_config('command_8add', 'three_limit_overlap'))
         }
         c.limit_amount_seq = {
-            '1': int(get_from_config('command_8add', 'one_limit_amount_seq')),
-            '2': int(get_from_config('command_8add', 'two_limit_amount_seq')),
-            '3': int(get_from_config('command_8add', 'three_limit_amount_seq'))
+            1: int(get_from_config('command_8add', 'one_limit_amount_seq')),
+            2: int(get_from_config('command_8add', 'two_limit_amount_seq')),
+            3: int(get_from_config('command_8add', 'three_limit_amount_seq'))
         }
 
         c.exclude_one_numbers = c._get_exclude_one_numbers()
