@@ -34,13 +34,12 @@ class Utils8Add():
         ).order_by('-game_id_int')[0:how_games]
 
     def _get_combination_options_8_add(self, numbers):
+        """ Get combination options from lotto_app/constants.py"""
         combination_8_add = [1]
         numbers = list(set(numbers))
         previous_n = numbers[0]
-        for n in numbers:
-            if n == numbers[0]:
-                pass
-            elif n == previous_n + 1:
+        for n in numbers[1:]:
+            if n == previous_n + 1:
                 combination_8_add[-1] += 1
                 previous_n = n
             else:
