@@ -246,6 +246,9 @@ class Command(BaseCommand):
         return False
 
     def _get_three_objs_for_comparison(self):
+        """ 1. should not be repeated until _obj with [3, 2, 1, 1, 1] options
+            2. should be all counted _obj with options where is the number '3'
+        """
         three_objs = []
         for _obj in self.gen_probability.game_objs:
             _options = self.gen_probability._get_combination_options_8_add(_obj.numbers)
@@ -257,6 +260,8 @@ class Command(BaseCommand):
         return three_objs
 
     def _get_three_numbers_for_comparison(self, three_objs):
+        """ for example, three_numbers = [[1, 2, 3], [6, 7, 8], [12, 13, 14]]
+        """
         three_numbers = []
         for _obj in three_objs:
             numbers = list(set(_obj.numbers))
@@ -341,8 +346,8 @@ class Command(BaseCommand):
             force_sleep, self.sleep_cycle = self.get_sleep_cycle(time_now, resp_command)
             if not force_sleep and self.evaluate_future_game():
                 choice_numbers = self.pc_choice_numbers()
-                print(self.print_info(self.info_evaluate_future_game['update_one']))
-                print(self.print_info(self.info_evaluate_future_game['update_two']))
+                print(self.print_info(self.info_evaluate_future_game['update_1']))
+                print(self.print_info(self.info_evaluate_future_game['update_2']))
                 print(self.info_evaluate_future_game['reason_for_choice'])
                 send_mail(
                     f'choice_numbers: {self.start_game_id + 1}',
